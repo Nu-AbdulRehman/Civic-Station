@@ -14,7 +14,7 @@ Categories: `ARCH` architecture and modifiability · `PERF` performance and late
 
 ### NFR-ARCH-001 — Unidirectional layering
 **MUST.** Backend dependencies point one way only: `routes → services → repositories` and `services → provider ports`. No module in a lower layer imports a module in a higher one.
-**Measure:** `scripts/check_submission.py` walks the AST of every module under `app/` and fails the build on an import pointing the wrong way — specifically: `repositories/` importing from `services/` or `routes/`, `services/` importing from `routes/`, and any module outside `repositories/`, `alembic/versions/` or `app/seed.py` importing `sqlalchemy`. An AST walk rather than a grep, because a grep cannot tell an import from a string. Manual code review at PR time as well.
+**Measure:** `scripts/check_submission.py` walks the AST of every module under `app/` and fails the build on an import pointing the wrong way — specifically: `repositories/` importing from `services/` or `routes/`, `services/` importing from `routes/`, and any module outside `repositories/`, `alembic/versions/` or `backend/seeds/complaints.py` importing `sqlalchemy`. An AST walk rather than a grep, because a grep cannot tell an import from a string. Manual code review at PR time as well.
 **Rationale:** Rubric C, 4 marks. A route that opens a database session is explicitly called out as a design failure.
 
 ### NFR-ARCH-002 — The classifier is replaceable without touching its callers

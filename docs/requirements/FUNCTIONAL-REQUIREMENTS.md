@@ -378,7 +378,7 @@ Histogram buckets for both duration histograms: `0.05, 0.1, 0.25, 0.5, 1, 2.5, 5
 **Verify:** Migration review, Test (`EXPLAIN` assertions), notes cross-check.
 
 ### FR-DATA-004 — Idempotent seed command
-**MUST.** `python -m app.seed` loads **exactly 30** complaints written in Urdu-influenced English. Running it a second time changes no rows and creates no duplicates.
+**MUST.** `python -m seeds.complaints` loads **exactly 30** complaints written in Urdu-influenced English. Running it a second time changes no rows and creates no duplicates.
 **Distribution, stated as counts so "a mix" is checkable:** at least 4 rows in each of the six categories; at least 8 `high`, 8 `normal` and 8 `low`; and statuses **12 `open`, 8 `in_progress`, 6 `resolved`, 4 `rejected`** — the terminal statuses matter because the Dashboard's 409 demonstration needs a `resolved` row to attempt an invalid transition against.
 **"Realistic" is defined by construction:** each row is hand-written, names a plausible Karachi-area street or sector, and uses the register of the brief's own example ("burst water main flooding Street 12 since fajr, water entering ground floors"). Seeded rows carry `triaged_by = 'rules'` and a plausible `triage_latency_ms`, because no model saw them — inventing `llm:groq` attribution would make `BR-VOCAB-004` false.
 **Idempotency:** deterministic UUIDv5 over the fixed namespace `6f2a1c94-3e5b-4d80-9a17-c0b8e4f21d63` plus the complaint text, with `ON CONFLICT (id) DO NOTHING` (`AD-022`).

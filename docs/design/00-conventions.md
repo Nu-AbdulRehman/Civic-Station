@@ -33,7 +33,7 @@ Civic-Station/
 │   ├── tests/
 │   │   ├── unit/
 │   │   └── integration/
-│   ├── seeds/complaints.py          # idempotent seed command
+│   ├── seeds/complaints.py          # idempotent seed: `python -m seeds.complaints` from backend/
 │   ├── Dockerfile  .dockerignore  pyproject.toml  alembic.ini
 ├── frontend/
 │   ├── src/
