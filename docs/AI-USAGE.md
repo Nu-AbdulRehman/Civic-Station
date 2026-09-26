@@ -52,6 +52,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   version/meta report the active provider; seed reuses the rules summary. Files:
   `backend/app/providers/triage/*`, `backend/app/{deps,main}.py`, `backend/app/routes/meta.py`,
   `backend/seeds/complaints.py`, `backend/tests/unit/test_triage_providers.py`.
+- 2026-09-26 · feat/T-M4-006-triage-cache-outcomes · A8 (T-M4-006/007, FR-CACHE-004, FR-AI-012,
+  FR-BE-006, AD-009/019): `triage_cache_key` + `RedisTriageCache` (24 h TTL, hit/miss counters,
+  skip when Redis is down), `RedisOutcomes` (versioned key, LPUSH+LTRIM to 20, six fields only),
+  two new ports, 12 integration tests. Files: `backend/app/providers/cache/*`,
+  `backend/tests/integration/test_triage_cache_outcomes.py`.
 
 ## Skill invocations
 
@@ -123,3 +128,12 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **Shaped / Wrote:** Decision stub `AD-060` (providers validate at their boundary; the pipeline
   maps `ValidationError` to `ValidationFailed` and re-validates).
 - **I changed:** accepted as-is.
+
+### 2026-09-26 · feat/T-M4-006-triage-cache-outcomes
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A8 (T-M4-006/007).
+- **I changed:** Outcome entries store exactly the six fields of `FR-BE-006`/`FR-AI-012` and
+  `CLAUDE.md` HARD rule 13; `01-api-contract.md` §7 also lists a nullable `recent[].confidence`,
+  so the response model keeps that field (always null) rather than changing the frozen API
+  surface. The contract's §7 example is the document to fix. Cache key uses the `|` separator
+  from `FR-CACHE-004`.
