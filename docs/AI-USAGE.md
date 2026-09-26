@@ -36,6 +36,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   page + total, locked status change, GROUP BY counts), 30-row idempotent seed, migrate/seed
   commands in `README.md`, 13 integration tests. Files: `backend/app/repositories/complaints.py`,
   `backend/seeds/*`, `backend/tests/integration/*`, `README.md`, `OPEN-DECISIONS.md`.
+- 2026-09-26 · feat/T-M4-001-cache-port-stats · A5 (T-M4-001/002/003, FR-BE-019,
+  FR-CACHE-001/002, AD-055, BR-CACHE-002/007): Redis client factory with 1 s timeouts,
+  `StatsCachePort`, `RedisStatsCache` (read-through, 30 s TTL, single-flight lock, fail-soft
+  invalidate), 4 integration tests on real Redis. Files: `backend/app/providers/cache/*`,
+  `backend/tests/integration/test_stats_cache.py`, `backend/pyproject.toml`.
 
 ## Skill invocations
 
@@ -81,3 +86,10 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **Shaped / Wrote:** Decision stub `AD-059` (the repository owns the transaction; status change
   is lock, check, update in one method).
 - **I changed:** accepted as-is.
+
+### 2026-09-26 · feat/T-M4-001-cache-port-stats
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A5 (T-M4-001/002/003).
+- **I changed:** Contract tests 11 and 12 need `StatsService` and `ComplaintService` (T-M2-008/009,
+  package A10), so A5 delivers the port, the read-through with single-flight, and `invalidate()`,
+  proven by integration tests against real Redis; the route and service wiring lands in A10.

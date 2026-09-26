@@ -13,9 +13,11 @@ uv run python -m seeds.complaints  # load the 30 fixture complaints; safe to re-
 The seed is idempotent: ids are UUIDv5 over a fixed namespace and inserts use
 `ON CONFLICT (id) DO NOTHING`, so a second run inserts nothing (`AD-022`).
 
-Integration tests run against real PostgreSQL and refuse any database whose name does not end
-in `_test`, because they downgrade the schema:
+Integration tests run against real PostgreSQL and Redis. They refuse any database whose name
+does not end in `_test`, because they downgrade the schema:
 
 ```sh
-DATABASE_URL=postgresql+asyncpg://<user>@<host>:<port>/civic_test uv run pytest tests/integration
+DATABASE_URL=postgresql+asyncpg://<user>@<host>:<port>/civic_test \
+REDIS_URL=redis://<host>:<port>/0 \
+uv run pytest tests/integration
 ```

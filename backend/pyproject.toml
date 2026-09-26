@@ -9,6 +9,7 @@ dependencies = [
     "prometheus-client>=0.26.0",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
+    "redis>=5.2",
     "sqlalchemy[asyncio]>=2.0.36",
     "structlog>=26.1.0",
     "uvicorn[standard]>=0.32",
