@@ -121,6 +121,13 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   headless Chrome against the seeded backend. Files: `frontend/{eslint.config.js,vite.config.ts,
   package.json,package-lock.json}`, `frontend/src/pages/{Dashboard,Stats}Page.tsx`,
   `scripts/scan_bundle.py`, `docs/evidence/*.png`, `README.md`.
+- 2026-09-26 · docs/T-M5-013-triage-layer-check · A19 (T-M2-014, T-M5-013, NFR-ARCH-001/002/004,
+  FR-BE-011/020/022, FR-AI-013, NFR-PERF-004, AD-052): `scripts/check_submission.py` (AST layer
+  checks + frontend duplicate-rule scan, 26 tests, planted-violation proof), `scripts/measure_triage.py`,
+  `docs/TRIAGE.md` with measured cache hit rate (0.20) and rules/simulated baselines; Groq rate
+  limits, Groq fallback rate and Groq-vs-Ollama left pending with commands. Files: `scripts/*`,
+  `backend/tests/unit/test_check_submission.py`, `docs/TRIAGE.md`, `docs/evidence/triage-*.json`,
+  `README.md`.
 
 ## Skill invocations
 
@@ -283,3 +290,14 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   `FR-FE-012`'s "no fetch outside the client" is enforced mechanically rather than by grep in
   review. The bundle secret scan is a small Python script under `scripts/` so
   `check_submission.py` (T-M2-014, P22) can reuse the same pattern set.
+
+### 2026-09-26 · docs/T-M5-013-triage-layer-check
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A19 (T-M5-013, T-M2-014).
+- **I changed:** `check_submission.py` is created with the M2 layer checks only (T-M2-014); the
+  §5.3 infrastructure detectors (secrets in history, Compose, k8s, CI `needs:`) are T-M8-014 (Dev 2)
+  and slot in as further functions in the same registry. `app/db/` is allowed to import
+  `sqlalchemy` alongside `repositories/`, because `00-conventions.md` §1 puts the engine and ORM
+  models there; `NFR-ARCH-001`'s list omits it. `docs/TRIAGE.md` reports only numbers actually
+  measured here; the Groq and Ollama figures need a live key and pulled weights, so those sections
+  name the pending measurement and its exact command instead of inventing values.

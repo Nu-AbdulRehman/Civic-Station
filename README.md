@@ -43,3 +43,15 @@ Captured from the running app (backend with `TRIAGE_PROVIDER=rules`, seeded data
 
 The dashboard shows the server's own 409 message after an attempted `resolved → open`; the stats
 view shows `HIT` on the second load inside the 30-second TTL.
+
+## Repository checks
+
+```sh
+python scripts/check_submission.py   # layer rules and frontend single-source-of-truth; exit 1 on findings
+```
+
+Standard library only. It walks the backend's AST for reverse imports, SQL or vendor SDKs outside
+their layer, environment reads outside `app/config.py`, concrete triage classes outside
+`providers/triage/`, and schema DDL outside migrations; and it scans `frontend/src/` for
+hand-written enum lists or transition maps. Triage measurements behind `docs/TRIAGE.md` come from
+`scripts/measure_triage.py`.
