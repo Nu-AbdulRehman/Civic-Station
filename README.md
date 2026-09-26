@@ -32,3 +32,14 @@ never edited by hand (`FR-FE-012`). After any backend contract change, regenerat
 cd frontend && npm run gen:types   # exports the schema from the app factory; no server needed
 npm run typecheck
 ```
+
+## Screenshots
+
+Captured from the running app (backend with `TRIAGE_PROVIDER=rules`, seeded database):
+
+| Submit | Dashboard | Stats |
+|---|---|---|
+| ![Submit](docs/evidence/submit.png) | ![Dashboard](docs/evidence/dashboard.png) | ![Stats](docs/evidence/stats.png) |
+
+The dashboard shows the server's own 409 message after an attempted `resolved → open`; the stats
+view shows `HIT` on the second load inside the 30-second TTL.

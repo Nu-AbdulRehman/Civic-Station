@@ -114,6 +114,13 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   navigation, 4 component tests. Files: `frontend/src/{App.tsx,pages/StatsPage.tsx}`,
   `frontend/src/components/{CacheBadge,ErrorBoundary}.tsx`, `frontend/src/styles.css`,
   `frontend/tests/{StatsCache,ErrorBoundary}.test.tsx`.
+- 2026-09-26 · chore/T-M1-012-frontend-quality · A18 (T-M1-012/013/014, FR-FE-012/019/020,
+  NFR-MAINT-001): eslint flat config (TS, react-hooks, `fetch` banned outside the client), two
+  set-state-in-effect findings fixed, Vitest coverage gate at 50 % (measured 84 % statements),
+  `scripts/scan_bundle.py` secret scan, three screenshots in `docs/evidence/` captured with
+  headless Chrome against the seeded backend. Files: `frontend/{eslint.config.js,vite.config.ts,
+  package.json,package-lock.json}`, `frontend/src/pages/{Dashboard,Stats}Page.tsx`,
+  `scripts/scan_bundle.py`, `docs/evidence/*.png`, `README.md`.
 
 ## Skill invocations
 
@@ -268,3 +275,11 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **I changed:** The error boundary wraps the routed content inside `<main>` rather than the whole
   router, so the navigation stays usable after a crash, which is what `FR-FE-017`'s acceptance
   asserts; it resets on navigation as well as on its own button.
+
+### 2026-09-26 · chore/T-M1-012-frontend-quality
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A18 (T-M1-012/013/014).
+- **I changed:** Added an eslint rule that bans `fetch` everywhere except `src/api/client.ts`, so
+  `FR-FE-012`'s "no fetch outside the client" is enforced mechanically rather than by grep in
+  review. The bundle secret scan is a small Python script under `scripts/` so
+  `check_submission.py` (T-M2-014, P22) can reuse the same pattern set.

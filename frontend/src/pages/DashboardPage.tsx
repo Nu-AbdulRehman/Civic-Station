@@ -19,8 +19,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const controller = new AbortController(); // a newer query cancels the older one
-    setLoading(true);
-    setError(null);
     listComplaints({ ...filters, page, pageSize: PAGE_SIZE }, controller.signal)
       .then(setData)
       .catch((e: unknown) => {
@@ -34,9 +32,22 @@ export default function DashboardPage() {
     return () => controller.abort();
   }, [filters, page]);
 
+  // Loading and error are reset where the change happens, not inside the effect, so a new
+  // query costs one render rather than a cascade.
+  function startQuery() {
+    setLoading(true);
+    setError(null);
+  }
+
   function changeFilters(next: Filters) {
+    startQuery();
     setFilters(next);
     setPage(1); // a new filter starts from the first page
+  }
+
+  function changePage(next: number) {
+    startQuery();
+    setPage(next);
   }
 
   function replace(updated: Complaint) {
@@ -96,7 +107,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           )}
-          <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onPage={setPage} />
+          <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onPage={changePage} />
         </>
       )}
     </section>

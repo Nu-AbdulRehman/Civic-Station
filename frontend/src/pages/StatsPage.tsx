@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiError, type CacheState, getStats, type Stats } from "../api/client";
 import { humanise } from "../api/labels";
 import { categoryValues, priorityValues, statusValues } from "../api/types";
@@ -15,37 +15,37 @@ interface Loaded {
  *  so the tables need no fallback for a missing key (FR-FE-010). */
 export default function StatsPage() {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
-  const inFlight = useRef<AbortController | null>(null);
-
-  const load = useCallback(async () => {
-    inFlight.current?.abort();
-    const controller = new AbortController();
-    inFlight.current = controller;
-    setLoading(true);
-    setError(null);
-    try {
-      const { stats, cache } = await getStats(controller.signal);
-      setLoaded({ stats, cache, fetchedAt: new Date() });
-    } catch (e) {
-      if (controller.signal.aborted) return;
-      if (!(e instanceof ApiError)) throw e;
-      setError(e);
-    } finally {
-      if (!controller.signal.aborted) setLoading(false);
-    }
-  }, []);
+  const [refreshes, setRefreshes] = useState(0); // each Refresh click is a new request
 
   useEffect(() => {
-    void load();
-    return () => inFlight.current?.abort();
-  }, [load]);
+    const controller = new AbortController();
+    getStats(controller.signal)
+      .then(({ stats, cache }) => {
+        setLoaded({ stats, cache, fetchedAt: new Date() });
+        setError(null);
+      })
+      .catch((e: unknown) => {
+        if (controller.signal.aborted) return;
+        if (e instanceof ApiError) setError(e);
+        else throw e;
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [refreshes]);
+
+  function refresh() {
+    setLoading(true);
+    setRefreshes((n) => n + 1);
+  }
 
   return (
     <section>
       <h2>Statistics</h2>
-      <button type="button" onClick={() => void load()} disabled={loading}>
+      <button type="button" onClick={refresh} disabled={loading}>
         {loading ? "Refreshing…" : "Refresh"}
       </button>
       {error && <ErrorBanner error={error} />}
