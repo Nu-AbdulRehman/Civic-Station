@@ -8,6 +8,7 @@ from app.config import Settings
 from app.domain.enums import ConfiguredProvider
 from app.providers.triage.base import TriageProvider
 from app.providers.triage.llm import LLMTriage
+from app.providers.triage.ollama import OllamaTriage
 from app.providers.triage.rules import RuleBasedTriage
 from app.providers.triage.simulated import SimulatedTriage
 
@@ -21,8 +22,4 @@ def build_triage_provider(settings: Settings) -> TriageProvider:
         case ConfiguredProvider.LLM:
             return LLMTriage(settings)
         case ConfiguredProvider.OLLAMA:
-            # ponytail: fails loudly until OllamaTriage (T-M5-009) lands; never a silent
-            # default to a provider the operator did not ask for.
-            raise SystemExit(
-                f"TRIAGE_PROVIDER={settings.triage_provider.value} is not implemented yet."
-            )
+            return OllamaTriage(settings)

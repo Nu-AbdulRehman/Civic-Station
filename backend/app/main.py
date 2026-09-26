@@ -45,6 +45,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     log.info("shutdown.started")
     await app.state.engine.dispose()
     await app.state.redis.aclose()
+    close_provider = getattr(app.state.triage_provider, "aclose", None)
+    if close_provider is not None:  # HTTP-backed providers hold a connection pool
+        await close_provider()
     log.info("shutdown.completed")
 
 

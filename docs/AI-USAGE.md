@@ -79,6 +79,12 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   `backend/app/providers/triage/{llm,factory}.py`, `backend/app/services/meta.py`,
   `backend/app/{main,deps}.py`, `backend/app/routes/meta.py`,
   `backend/app/providers/cache/outcomes.py`, `backend/tests/**`, `backend/pyproject.toml`.
+- 2026-09-26 · feat/T-M5-009-ollama-triage · A12 (T-M5-009, FR-AI-002, AD-005/006/045/046):
+  `OllamaTriage` over `httpx` (`/api/chat`, JSON format, `temperature 0`, `num_predict 200`,
+  same prompt and validation), factory wiring, provider pools closed at shutdown, 11
+  mocked-transport tests. Files: `backend/app/providers/triage/{ollama,llm,factory}.py`,
+  `backend/app/main.py`, `backend/tests/unit/test_{ollama_triage,triage_providers}.py`,
+  `backend/pyproject.toml`.
 
 ## Skill invocations
 
@@ -188,3 +194,11 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   single retry (`BR-TRIAGE-007`), and leaving the SDK's default of 2 would have turned "one
   retry" into up to six calls. T-M5-008's "live smoke run" needs a real `GROQ_API_KEY` and is
   left to the developer; every automated test runs against a mocked transport (`NFR-TEST-001`).
+
+### 2026-09-26 · feat/T-M5-009-ollama-triage
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A12 (T-M5-009).
+- **I changed:** Done-when "classifies with no egress" needs the Compose `ollama` service and the
+  `make pull-models` volume (P9/T-M6-010, Dev 2); A12 delivers the provider against Ollama's
+  `/api/chat` contract, proven on a mocked transport. `httpx` moves from a dev-only to a runtime
+  dependency, as `AD-005` prescribes it for this provider.

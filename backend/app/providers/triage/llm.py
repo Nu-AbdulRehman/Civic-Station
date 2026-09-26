@@ -68,3 +68,6 @@ class LLMTriage:
         content = response.choices[0].message.content or ""
         # Requesting JSON is not evidence that JSON came back (BR-TRIAGE-003).
         return TriageResult.model_validate_json(strip_fence(content))
+
+    async def aclose(self) -> None:
+        await self._client.close()

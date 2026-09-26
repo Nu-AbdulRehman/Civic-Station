@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.config import Settings
-from app.domain.enums import Category, ConfiguredProvider, Priority
+from app.domain.enums import Category, Priority
 from app.domain.models import TriageResult
 from app.providers.triage.factory import build_triage_provider
 from app.providers.triage.redact import redact
@@ -170,9 +170,8 @@ def test_factory_builds_llm_with_a_key() -> None:
     assert provider.name == "llm:groq"
 
 
-def test_factory_refuses_unimplemented_ollama_loudly() -> None:
-    with pytest.raises(SystemExit, match="TRIAGE_PROVIDER=ollama"):
-        build_triage_provider(_settings(triage_provider=ConfiguredProvider.OLLAMA))
+def test_factory_builds_ollama() -> None:
+    assert build_triage_provider(_settings(triage_provider="ollama")).name == "llm:ollama"
 
 
 def test_version_and_meta_report_the_active_provider(client: TestClient) -> None:
