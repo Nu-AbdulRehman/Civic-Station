@@ -35,3 +35,99 @@ body {
   margin: 1.5rem auto;
   padding: 0 1.5rem;
 }
+.form {
+  display: grid;
+  gap: 1rem;
+  max-width: 640px;
+}
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+.field input,
+.field textarea,
+select {
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid #b8c0c9;
+  border-radius: 4px;
+}
+.field [aria-invalid="true"] {
+  border-color: #b3261e;
+}
+.field-error {
+  color: #b3261e;
+  margin: 0;
+  font-size: 0.9rem;
+}
+button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #34506b;
+  background: #34506b;
+  color: #fff;
+  cursor: pointer;
+  justify-self: start;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #b8c0c9;
+  border-top-color: #34506b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.banner {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+.banner.error {
+  background: #fdecea;
+  border: 1px solid #b3261e;
+}
+.banner.warning {
+  background: #fff4e5;
+  border: 1px solid #b26a00;
+}
+.banner p {
+  margin: 0.25rem 0;
+}
+.request-id,
+.muted {
+  color: #5b6570;
+  font-size: 0.85rem;
+}
+.result {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #dde1e6;
+  border-radius: 4px;
+}
+.result dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+}
+.result dt {
+  font-weight: 600;
+}
+.result dd {
+  margin: 0;
+}

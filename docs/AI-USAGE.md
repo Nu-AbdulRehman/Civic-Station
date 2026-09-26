@@ -96,6 +96,12 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   generated `types.ts` with runtime enum arrays, typed `api/client.ts`, `.gitattributes` for LF
   scripts. Files: `frontend/**`, `scripts/export_openapi.py`, `.gitattributes`, `.gitignore`,
   `README.md`.
+- 2026-09-26 · feat/T-M1-005-submit-page · A15 (T-M1-005/006, FR-FE-001…005/013, BR-VAL-001/002):
+  `SubmitPage` (schema-derived bounds, trimmed validation, honest loading, abort on unmount, three
+  distinct error states), `TriageResult`, `ErrorBanner`, provider labels, network errors typed in
+  the client, Vitest + Testing Library with 12 tests across five files. Files: `frontend/src/**`,
+  `frontend/tests/*`, `frontend/{package.json,package-lock.json,vite.config.ts,tsconfig.json}`,
+  `docs/failure-log.md`.
 
 ## Skill invocations
 
@@ -230,3 +236,11 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   `AD-037` names `react-router`. `@vitejs/plugin-react` pinned to 4.7.0, the last line whose peer
   range includes Vite 6. The OpenAPI schema is exported by `scripts/export_openapi.py` from the app
   factory, so regenerating types needs no running backend and no `localhost` URL in `frontend/`.
+
+### 2026-09-26 · feat/T-M1-005-submit-page
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A15 (T-M1-005/006).
+- **I changed:** Client-side length bounds are read from the committed `openapi.json`
+  (`ComplaintCreate.minLength/maxLength`) instead of literal numbers, so the mirror of `BR-VAL-001/002`
+  cannot drift from the server. `vitest` 5.0.2 instead of 3.x: 3.x pulls `@vitest/mocker` with a
+  moderate advisory, 5.x supports Vite 6 and audits clean.

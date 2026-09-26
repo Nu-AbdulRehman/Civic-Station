@@ -77,7 +77,13 @@ async function request(path: string, init: RequestInit = {}): Promise<Response> 
   const headers = new Headers(init.headers);
   headers.set("X-Request-ID", requestId);
   if (init.body !== undefined) headers.set("Content-Type", "application/json");
-  const response = await fetch(`${BASE}${path}`, { ...init, headers });
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}${path}`, { ...init, headers });
+  } catch (error) {
+    if (init.signal?.aborted) throw error; // a cancelled request is not an error to show
+    throw new ApiError(0, "network_error", "Could not reach the server.", requestId);
+  }
   if (!response.ok) throw await toApiError(response, requestId);
   return response;
 }

@@ -33,3 +33,8 @@ reconstructed from memory; from here on, entries are appended as the failure hap
 - **Symptom:** passing `reporter_contact` into triage left the test green.
 - **Wrongly believed:** asserting that an email address never reaches the provider tests the contact exclusion.
 - **Truth:** `redact()` scrubbed the email first, masking the leak. The test now uses a plain name, which redaction cannot catch.
+
+### 2026-09-26 · A15 · Three Submit error-state tests failed with the very error they injected
+- **Symptom:** every `SubmitErrors` test failed with the `ApiError` it had passed to `mockRejectedValue`, although the page rendered the right state.
+- **Wrongly believed:** vitest 5's `mockRejectedValue` creates its rejected promise eagerly and the runner reports it as unhandled; a workaround was written on that basis.
+- **Truth:** `beforeEach(() => vi.mocked(fn).mockReset())` *returns* the mock, and vitest runs a function returned from `beforeEach` as teardown — so after each test it called the mock, which threw. Isolated by a debug test that passed without the `beforeEach`. Fixed with block-bodied hooks; the workaround and its wrong explanation were removed.
