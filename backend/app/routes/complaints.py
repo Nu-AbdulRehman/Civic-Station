@@ -1,36 +1,18 @@
-"""Complaint endpoints. T-M2-001 stubs: static bodies, replaced by service calls in T-M2-010."""
+"""Complaint endpoints. HTTP only: parse, call one service operation, shape the response."""
 
-from datetime import UTC, datetime
 from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.deps import enforce_rate_limit
-from app.domain.enums import Category, Priority, Status, TriagedBy
+from app.deps import enforce_rate_limit, get_complaint_service
+from app.domain.enums import Category, Priority, Status
 from app.domain.models import Complaint, ComplaintCreate, ComplaintPage, StatusUpdate
+from app.services.complaints import ComplaintService
 
 router = APIRouter(prefix="/api/complaints", tags=["complaints"])
 
-_STUB_TIME = datetime(2026, 1, 1, tzinfo=UTC)
-
-
-def _stub_complaint(complaint_id: UUID, complaint_status: Status = Status.OPEN) -> Complaint:
-    return Complaint(
-        id=complaint_id,
-        text="Stub complaint text.",
-        location="Stub location",
-        reporter_contact=None,
-        category=Category.OTHER,
-        priority=Priority.NORMAL,
-        status=complaint_status,
-        ai_summary="other: Stub complaint text.",
-        triaged_by=TriagedBy.RULES,
-        triage_confidence=0.35,
-        triage_latency_ms=0,
-        created_at=_STUB_TIME,
-        updated_at=_STUB_TIME,
-    )
+Service = Annotated[ComplaintService, Depends(get_complaint_service)]
 
 
 @router.post(
@@ -38,28 +20,34 @@ def _stub_complaint(complaint_id: UUID, complaint_status: Status = Status.OPEN) 
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(enforce_rate_limit)],
 )
-async def create_complaint(body: ComplaintCreate, response: Response) -> Complaint:
-    complaint = _stub_complaint(uuid4())
+async def create_complaint(
+    body: ComplaintCreate, response: Response, service: Service
+) -> Complaint:
+    complaint = await service.submit(body)
     response.headers["Location"] = f"/api/complaints/{complaint.id}"
     return complaint
 
 
 @router.get("")
 async def list_complaints(
+    service: Service,
     category: Category | None = None,
     priority: Priority | None = None,
     status: Status | None = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> ComplaintPage:
-    return ComplaintPage(items=[], total=0, page=page, page_size=page_size)
+    items, total = await service.list_page(
+        category=category, priority=priority, status=status, page=page, page_size=page_size
+    )
+    return ComplaintPage(items=items, total=total, page=page, page_size=page_size)
 
 
 @router.get("/{id}")
-async def get_complaint(id: UUID) -> Complaint:
-    return _stub_complaint(id)
+async def get_complaint(id: UUID, service: Service) -> Complaint:
+    return await service.get(id)
 
 
 @router.patch("/{id}/status")
-async def change_status(id: UUID, body: StatusUpdate) -> Complaint:
-    return _stub_complaint(id, body.status)
+async def change_status(id: UUID, body: StatusUpdate, service: Service) -> Complaint:
+    return await service.change_status(id, body.status)

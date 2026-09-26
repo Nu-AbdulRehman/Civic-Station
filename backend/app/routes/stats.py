@@ -1,22 +1,20 @@
-"""GET /api/stats. T-M2-001 stub: zeroes, always MISS. Real cache in T-M2-009."""
+"""GET /api/stats; `X-Cache` says where the body came from (BR-CACHE-002)."""
 
-from datetime import UTC, datetime
+from typing import Annotated
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
 
-from app.domain.enums import Category, Priority, Status
+from app.deps import get_stats_service
 from app.domain.models import Stats
+from app.services.stats import StatsService
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
 
 @router.get("/stats")
-async def get_stats(response: Response) -> Stats:
-    response.headers["X-Cache"] = "MISS"
-    return Stats(
-        total=0,
-        by_category=dict.fromkeys(Category, 0),
-        by_priority=dict.fromkeys(Priority, 0),
-        by_status=dict.fromkeys(Status, 0),
-        generated_at=datetime.now(UTC),
-    )
+async def get_stats(
+    response: Response, service: Annotated[StatsService, Depends(get_stats_service)]
+) -> Stats:
+    stats, hit = await service.get_stats()
+    response.headers["X-Cache"] = "HIT" if hit else "MISS"
+    return stats

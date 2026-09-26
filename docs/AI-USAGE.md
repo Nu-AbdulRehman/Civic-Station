@@ -64,6 +64,13 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   stripping, 28 unit tests incl. the mandatory fallback test. Files:
   `backend/app/providers/triage/{base,pipeline,prompt}.py`, `backend/app/main.py`,
   `backend/tests/unit/test_triage_pipeline.py`, `docs/decisions/OPEN-DECISIONS.md`.
+- 2026-09-26 · feat/T-M2-008-services-routes · A10 (T-M2-007…013, FR-BE-001…015/021, BR-STATUS-*,
+  BR-CACHE-001/003, BR-OPS-001/002, AD-024/025): `ComplaintService`, `StatsService`,
+  `ReadinessService`, store/triage ports, real routes, `/ready` with concurrent checks, lifespan
+  shutdown, outermost CORS (204/403 preflight), in-memory fakes, unit + integration contract
+  tests incl. the mandatory fallback test over HTTP. Files: `backend/app/{main,deps,errors}.py`,
+  `backend/app/{services,routes}/*`, `backend/app/observability/cors.py`,
+  `backend/app/repositories/health.py`, `backend/tests/**`.
 
 ## Skill invocations
 
@@ -156,3 +163,12 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **Shaped / Wrote:** Decision stub `AD-061` (`run()`/`report()` split; retry and validation
   logs at INFO so a fallback yields exactly one WARNING).
 - **I changed:** accepted as-is.
+
+### 2026-09-26 · feat/T-M2-008-services-routes
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A10 (T-M2-007…013).
+- **I changed:** Engine, session factory and Redis client are built in `create_app` (all three
+  connect lazily, so nothing is opened before the first request) and closed by the lifespan
+  shutdown, instead of being created in lifespan startup: tests can then inject fakes on
+  `app.state` without running the lifespan. `/api/meta/providers` `recent` stays for A11
+  (T-M5-010, per the work breakdown).

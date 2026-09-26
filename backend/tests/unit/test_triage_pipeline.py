@@ -11,13 +11,14 @@ from prometheus_client import REGISTRY
 from pydantic import ValidationError
 
 from app.domain.enums import Category, ErrorClass, Priority, TriagedBy
-from app.domain.models import ProviderOutcome, TriageResult
+from app.domain.models import TriageResult
 from app.observability.logging import configure_logging
 from app.providers.cache.triage import triage_cache_key
 from app.providers.triage.base import ProviderHTTPError
 from app.providers.triage.pipeline import TriagePipeline
 from app.providers.triage.prompt import CLOSE, OPEN, build_messages, strip_sentinels
 from app.providers.triage.simulated import SimulatedTriage
+from tests.fakes import MemoryOutcomes, MemoryTriageCache
 
 GOOD = TriageResult(
     category=Category.WATER, priority=Priority.HIGH, summary="water: burst main", confidence=0.9
@@ -47,32 +48,10 @@ class Scripted:
         return step
 
 
-class MemoryCache:
-    def __init__(self) -> None:
-        self.data: dict[str, tuple[TriageResult, TriagedBy]] = {}
-
-    async def get(self, key: str) -> tuple[TriageResult, TriagedBy] | None:
-        return self.data.get(key)
-
-    async def set(self, key: str, result: TriageResult, provider: TriagedBy) -> None:
-        self.data[key] = (result, provider)
-
-
-class MemoryOutcomes:
-    def __init__(self) -> None:
-        self.entries: list[ProviderOutcome] = []
-
-    async def record(self, outcome: ProviderOutcome) -> None:
-        self.entries.insert(0, outcome)
-
-    async def recent(self) -> list[ProviderOutcome]:
-        return self.entries[:20]
-
-
 class Harness:
     def __init__(self, provider: Any, prompt_version: str = "v1", timeout: float = 5) -> None:
         self.provider = provider
-        self.cache = MemoryCache()
+        self.cache = MemoryTriageCache()
         self.outcomes = MemoryOutcomes()
         self.sleeps: list[float] = []
         self.pipeline = TriagePipeline(
@@ -235,7 +214,7 @@ async def test_fallback_results_are_never_cached() -> None:
 
 
 async def test_unreadable_cache_entry_is_a_miss() -> None:
-    class BrokenCache(MemoryCache):
+    class BrokenCache(MemoryTriageCache):
         async def get(self, key: str) -> tuple[TriageResult, TriagedBy] | None:
             raise ValueError("entry written by an older schema")
 

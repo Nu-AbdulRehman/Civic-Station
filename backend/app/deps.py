@@ -6,6 +6,9 @@ from app.client_ip import resolve_client_ip
 from app.config import Settings
 from app.providers.cache.ports import RateLimiterPort
 from app.providers.triage.base import TriageProvider
+from app.services.complaints import ComplaintService
+from app.services.readiness import ReadinessService
+from app.services.stats import StatsService
 
 
 def get_settings(request: Request) -> Settings:
@@ -30,3 +33,18 @@ async def enforce_rate_limit(request: Request) -> None:
     validates the body, so a 429 costs no validation, no inference and no row (BR-CACHE-006)."""
     limiter: RateLimiterPort = request.app.state.rate_limiter
     await limiter.check(client_ip(request))
+
+
+def get_complaint_service(request: Request) -> ComplaintService:
+    service: ComplaintService = request.app.state.complaint_service
+    return service
+
+
+def get_stats_service(request: Request) -> StatsService:
+    service: StatsService = request.app.state.stats_service
+    return service
+
+
+def get_readiness_service(request: Request) -> ReadinessService:
+    service: ReadinessService = request.app.state.readiness_service
+    return service

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.client_ip import resolve_client_ip
 from app.config import Settings
-from tests.conftest import FakeRateLimiter
+from tests.fakes import FakeRateLimiter
 
 TRUSTED = [ip_network("10.0.0.0/8")]
 VALID = {"text": "Water pipe burst on main road", "location": "Saddar"}

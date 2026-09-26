@@ -32,14 +32,14 @@ def error_response(
     message: str,
     fields: list[dict[str, str]] | None = None,
     headers: dict[str, str] | None = None,
+    extra: dict[str, Any] | None = None,
 ) -> JSONResponse:
     error: dict[str, Any] = {"code": code, "message": message}
     if fields is not None:
         error["fields"] = fields
     request_id = structlog.contextvars.get_contextvars().get("request_id")
-    return JSONResponse(
-        {"error": error, "request_id": request_id}, status_code=status, headers=headers
-    )
+    body = {"error": error, "request_id": request_id, **(extra or {})}
+    return JSONResponse(body, status_code=status, headers=headers)
 
 
 def _field_name(loc: tuple[int | str, ...]) -> str:

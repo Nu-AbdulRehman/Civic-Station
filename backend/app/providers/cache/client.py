@@ -21,3 +21,8 @@ def make_redis(redis_url: str) -> Redis:
         socket_connect_timeout=SOCKET_TIMEOUT_SECONDS,
         decode_responses=True,
     )
+
+
+async def ping(redis: Redis) -> None:
+    """Redis reachability for /ready."""
+    await redis.ping()

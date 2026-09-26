@@ -68,7 +68,8 @@ def test_complaint_text_and_contact_absent_at_info(client: TestClient, logs: io.
 
 
 def _count(template: str) -> float:
-    labels = {"method": "GET", "path_template": template, "status": "200"}
+    # An unknown id is a 404; the label is still the template, never the id.
+    labels = {"method": "GET", "path_template": template, "status": "404"}
     return REGISTRY.get_sample_value("http_requests_total", labels) or 0.0
 
 
