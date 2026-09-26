@@ -8,10 +8,15 @@ from pydantic_settings import BaseSettings
 from app.domain.enums import ConfiguredProvider
 
 
-class Settings(BaseSettings):
-    """Mirrors 00-conventions.md §3. Field names map case-insensitively to env vars."""
+class DatabaseSettings(BaseSettings):
+    """The subset the migration runner needs, so Alembic does not require REDIS_URL."""
 
     database_url: str
+
+
+class Settings(DatabaseSettings):
+    """Mirrors 00-conventions.md §3. Field names map case-insensitively to env vars."""
+
     redis_url: str
 
     triage_provider: ConfiguredProvider = ConfiguredProvider.RULES

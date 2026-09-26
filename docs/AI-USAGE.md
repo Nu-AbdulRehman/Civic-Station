@@ -26,6 +26,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   structlog JSON logs, fixed Prometheus metrics, path param renamed to `{id}`; AD-057/058 recorded.
   Files: `backend/app/{errors,main}.py`, `backend/app/observability/*`, `backend/tests/**`,
   `docs/decisions/OPEN-DECISIONS.md`.
+- 2026-09-26 · feat/T-M3-001-schema-migration · A3 (T-M3-001…004, FR-DATA-001/002/003,
+  BR-DATA-001/002, AD-020/021/026/049): async Alembic env, revision `0001` (enum types, table,
+  every CHECK, three indexes, strict type drop), `Mapped` ORM model, engine factory,
+  `DatabaseSettings`, 20 integration tests against real PostgreSQL. Files: `backend/alembic*`,
+  `backend/app/{config.py,db/*}`, `backend/tests/integration/*`, `backend/pyproject.toml`.
 
 ## Skill invocations
 
@@ -52,3 +57,10 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   framework-level error envelopes) in the `OPEN-DECISIONS.md` resolution log.
 - **I changed:** accepted as-is. Also collapsed the request-id, logging and metrics steps of
   `03-M2-backend.md` §2.3 into one ASGI middleware; the fixed order is preserved inside it.
+
+### 2026-09-26 · feat/T-M3-001-schema-migration
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A3 (T-M3-001…004).
+- **I changed:** Put all three indexes in revision `0001`, following `04-M3-data.md` §2.3 and
+  `FR-DATA-003`/`AD-049`; the same document's task table still says "Revision 0002: the two
+  indexes" (T-M3-004), which §2.3 itself calls the stale wording. `0002` stays reserved.
