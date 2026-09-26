@@ -57,6 +57,13 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   skip when Redis is down), `RedisOutcomes` (versioned key, LPUSH+LTRIM to 20, six fields only),
   two new ports, 12 integration tests. Files: `backend/app/providers/cache/*`,
   `backend/tests/integration/test_triage_cache_outcomes.py`.
+- 2026-09-26 · feat/T-M5-006-triage-pipeline · A9 (T-M5-006/007/011/012, FR-AI-005…010,
+  BR-TRIAGE-003/005/006/007/008/010/011, FR-BE-025, AD-007/060/061): `TriagePipeline.run()`
+  (redact, cache, hard timeout, one jittered retry, re-validation, rules fallback) and `report()`
+  (single fallback WARNING, outcome record), `ProviderHTTPError`, delimited prompt with sentinel
+  stripping, 28 unit tests incl. the mandatory fallback test. Files:
+  `backend/app/providers/triage/{base,pipeline,prompt}.py`, `backend/app/main.py`,
+  `backend/tests/unit/test_triage_pipeline.py`, `docs/decisions/OPEN-DECISIONS.md`.
 
 ## Skill invocations
 
@@ -137,3 +144,15 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   so the response model keeps that field (always null) rather than changing the frozen API
   surface. The contract's §7 example is the document to fix. Cache key uses the `|` separator
   from `FR-CACHE-004`.
+
+### 2026-09-26 · feat/T-M5-006-triage-pipeline
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A9 (T-M5-006/007).
+- **I changed:** The mandatory test is proven at the pipeline boundary here; its HTTP form
+  (`POST` -> 201 with `rules:fallback`) needs `ComplaintService` and lands in A10 (T-M2-008).
+
+### 2026-09-26 · feat/T-M5-006-triage-pipeline
+- **Tool:** Claude Code + `ponytail`
+- **Shaped / Wrote:** Decision stub `AD-061` (`run()`/`report()` split; retry and validation
+  logs at INFO so a fallback yields exactly one WARNING).
+- **I changed:** accepted as-is.

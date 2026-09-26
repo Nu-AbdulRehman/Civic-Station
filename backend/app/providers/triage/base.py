@@ -6,7 +6,7 @@ from typing import Protocol
 from app.domain.enums import ErrorClass, TriagedBy
 from app.domain.models import TriageResult
 
-__all__ = ["TriageOutcome", "TriageProvider", "TriageResult"]
+__all__ = ["ProviderHTTPError", "TriageOutcome", "TriageProvider", "TriageResult"]
 
 
 class TriageProvider(Protocol):
@@ -31,3 +31,13 @@ class TriageOutcome:
     latency_ms: int
     fallback: bool
     error_class: ErrorClass | None = None
+
+
+class ProviderHTTPError(Exception):
+    """A vendor-neutral HTTP failure. Providers translate their SDK's errors into this, so the
+    pipeline can classify and retry without importing any vendor library (06-M5 §2.2)."""
+
+    def __init__(self, status_code: int, retry_after_seconds: float | None = None) -> None:
+        self.status_code = status_code
+        self.retry_after_seconds = retry_after_seconds
+        super().__init__(f"provider returned HTTP {status_code}")
