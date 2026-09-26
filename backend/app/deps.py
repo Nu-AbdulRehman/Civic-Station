@@ -7,6 +7,7 @@ from app.config import Settings
 from app.providers.cache.ports import RateLimiterPort
 from app.providers.triage.base import TriageProvider
 from app.services.complaints import ComplaintService
+from app.services.meta import ProvidersService
 from app.services.readiness import ReadinessService
 from app.services.stats import StatsService
 
@@ -47,4 +48,9 @@ def get_stats_service(request: Request) -> StatsService:
 
 def get_readiness_service(request: Request) -> ReadinessService:
     service: ReadinessService = request.app.state.readiness_service
+    return service
+
+
+def get_providers_service(request: Request) -> ProvidersService:
+    service: ProvidersService = request.app.state.providers_service
     return service

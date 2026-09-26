@@ -71,6 +71,14 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   tests incl. the mandatory fallback test over HTTP. Files: `backend/app/{main,deps,errors}.py`,
   `backend/app/{services,routes}/*`, `backend/app/observability/cors.py`,
   `backend/app/repositories/health.py`, `backend/tests/**`.
+- 2026-09-26 · feat/T-M5-008-llm-triage-meta · A11 (T-M5-008/010, FR-AI-005/011/012, FR-BE-006,
+  BR-TRIAGE-003/007/014, AD-006/045): `LLMTriage` (Groq via `openai`, JSON mode, `temperature=0`,
+  `max_tokens=200`, SDK retries off, fence stripping, SDK errors mapped to `ProviderHTTPError`/
+  `TimeoutError`), factory wiring, `ProvidersService` feeding `/api/meta/providers` from
+  `cs:outcomes`, mocked-transport tests incl. key-sentinel log check, contract test 19. Files:
+  `backend/app/providers/triage/{llm,factory}.py`, `backend/app/services/meta.py`,
+  `backend/app/{main,deps}.py`, `backend/app/routes/meta.py`,
+  `backend/app/providers/cache/outcomes.py`, `backend/tests/**`, `backend/pyproject.toml`.
 
 ## Skill invocations
 
@@ -172,3 +180,11 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   shutdown, instead of being created in lifespan startup: tests can then inject fakes on
   `app.state` without running the lifespan. `/api/meta/providers` `recent` stays for A11
   (T-M5-010, per the work breakdown).
+
+### 2026-09-26 · feat/T-M5-008-llm-triage-meta
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A11 (T-M5-008/010).
+- **I changed:** The SDK's own retries are disabled (`max_retries=0`): the pipeline owns the
+  single retry (`BR-TRIAGE-007`), and leaving the SDK's default of 2 would have turned "one
+  retry" into up to six calls. T-M5-008's "live smoke run" needs a real `GROQ_API_KEY` and is
+  left to the developer; every automated test runs against a mocked transport (`NFR-TEST-001`).

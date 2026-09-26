@@ -8,10 +8,12 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.domain.enums import TriagedBy
 from app.main import create_app
 from app.providers.triage.base import TriageProvider
 from app.providers.triage.pipeline import TriagePipeline
 from app.services.complaints import ComplaintService
+from app.services.meta import ProvidersService
 from app.services.readiness import ReadinessService
 from app.services.stats import StatsService
 from tests.fakes import (
@@ -51,6 +53,9 @@ def install_fakes(app: FastAPI, fakes: Fakes, provider: TriageProvider | None = 
     app.state.rate_limiter = fakes.limiter
     app.state.complaint_service = ComplaintService(fakes.store, pipeline, fakes.stats_cache)
     app.state.stats_service = StatsService(fakes.store, fakes.stats_cache)
+    app.state.providers_service = ProvidersService(
+        settings.triage_provider, TriagedBy(provider.name), fakes.outcomes
+    )
     app.state.readiness_service = ReadinessService({"database": _ok, "cache": _ok}, 1)
 
 

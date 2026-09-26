@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from app.config import Settings, load_settings
 from app.db.session import make_engine, make_session_factory
+from app.domain.enums import TriagedBy
 from app.errors import register_error_handlers
 from app.observability import metrics
 from app.observability.cors import (
@@ -28,6 +29,7 @@ from app.repositories.complaints import ComplaintRepository
 from app.repositories.health import ping_database
 from app.routes import complaints, meta, ops, stats
 from app.services.complaints import ComplaintService
+from app.services.meta import ProvidersService
 from app.services.readiness import ReadinessService
 from app.services.stats import StatsService
 
@@ -59,10 +61,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine, app.state.session_factory, app.state.redis = engine, session_factory, redis
 
     provider = build_triage_provider(settings)  # resolution failure = no boot
+    outcomes = RedisOutcomes(redis, settings.prompt_version)
     pipeline = TriagePipeline(
         provider,
         RedisTriageCache(redis, settings.triage_cache_ttl_seconds),
-        RedisOutcomes(redis, settings.prompt_version),
+        outcomes,
         timeout_seconds=settings.triage_timeout_seconds,
         prompt_version=settings.prompt_version,
     )
@@ -76,6 +79,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.complaint_service = ComplaintService(store, pipeline, stats_cache)
     app.state.stats_service = StatsService(store, stats_cache)
+    app.state.providers_service = ProvidersService(
+        settings.triage_provider, TriagedBy(provider.name), outcomes
+    )
     app.state.readiness_service = ReadinessService(
         {
             "database": lambda: ping_database(app.state.session_factory),

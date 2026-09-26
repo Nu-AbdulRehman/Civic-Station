@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import uuid4
 
-import httpx
+import httpx2
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -12,7 +12,7 @@ from app.domain.errors import InvalidTransitionError, RateLimitExceededError
 VALID = {"text": "Water pipe burst on main road", "location": "G-9 Markaz"}
 
 
-def assert_envelope(r: httpx.Response, status: int, code: str) -> dict[str, Any]:
+def assert_envelope(r: httpx2.Response, status: int, code: str) -> dict[str, Any]:
     """00-conventions §4: exactly `error` + `request_id`; contract test 20."""
     assert r.status_code == status
     body: dict[str, Any] = r.json()

@@ -255,3 +255,21 @@ def test_middleware_rejections_carry_cors_too(cors_client: TestClient) -> None:
     )
     assert r.status_code == 415
     assert r.headers["access-control-allow-origin"] == ORIGIN
+
+
+def test_19_meta_providers_reports_the_forced_failure(app: FastAPI, fakes: Fakes) -> None:
+    install_fakes(app, fakes, provider=SimulatedTriage(1337, "raise"))
+    client = TestClient(app)
+    body = post(client)
+    meta = client.get("/api/meta/providers").json()
+    assert meta["active_provider"] == "simulated"
+    newest = meta["recent"][0]
+    assert newest["complaint_id"] == body["id"]
+    assert (newest["provider"], newest["fallback"], newest["error_class"]) == (
+        "rules:fallback",
+        True,
+        "Other",
+    )
+    assert (
+        newest["confidence"] is None
+    )  # six fields stored (FR-BE-006); the contract's slot stays null

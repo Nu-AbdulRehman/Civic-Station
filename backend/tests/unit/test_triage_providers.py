@@ -165,11 +165,14 @@ def test_factory_resolves_by_configuration() -> None:
     assert build_triage_provider(_settings(triage_provider="simulated")).name == "simulated"
 
 
-@pytest.mark.parametrize("value", [ConfiguredProvider.LLM, ConfiguredProvider.OLLAMA])
-def test_factory_refuses_unimplemented_providers_loudly(value: ConfiguredProvider) -> None:
-    extra = {"groq_api_key": "k"} if value is ConfiguredProvider.LLM else {}
-    with pytest.raises(SystemExit, match=f"TRIAGE_PROVIDER={value.value}"):
-        build_triage_provider(_settings(triage_provider=value, **extra))
+def test_factory_builds_llm_with_a_key() -> None:
+    provider = build_triage_provider(_settings(triage_provider="llm", groq_api_key="k"))
+    assert provider.name == "llm:groq"
+
+
+def test_factory_refuses_unimplemented_ollama_loudly() -> None:
+    with pytest.raises(SystemExit, match="TRIAGE_PROVIDER=ollama"):
+        build_triage_provider(_settings(triage_provider=ConfiguredProvider.OLLAMA))
 
 
 def test_version_and_meta_report_the_active_provider(client: TestClient) -> None:

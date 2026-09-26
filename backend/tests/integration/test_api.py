@@ -150,3 +150,13 @@ def test_18_identical_complaints_cost_one_inference(client: TestClient) -> None:
     first, second = post(client), post(client)
     assert REGISTRY.get_sample_value("triage_cache_hits_total") == before + 1
     assert (first["category"], first["priority"]) == (second["category"], second["priority"])
+
+
+def test_19_meta_providers_reads_the_redis_outcomes_list() -> None:
+    with make_client(simulated_failure_mode="raise") as c:
+        truncate(c)
+        ids = [post(c)["id"] for _ in range(3)]
+        meta = c.get("/api/meta/providers").json()
+        assert meta["configured"] == "simulated" and meta["active_provider"] == "simulated"
+        assert [e["complaint_id"] for e in meta["recent"][:3]] == ids[::-1]  # newest first
+        assert all(e["fallback"] and e["provider"] == "rules:fallback" for e in meta["recent"][:3])

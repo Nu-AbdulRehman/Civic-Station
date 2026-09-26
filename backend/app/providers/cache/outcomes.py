@@ -36,4 +36,10 @@ class RedisOutcomes:
         except REDIS_ERRORS:
             log.warning("outcomes.unavailable")
             return []
-        return [ProviderOutcome.model_validate_json(e) for e in entries]
+        recent = []
+        for entry in entries:
+            try:
+                recent.append(ProviderOutcome.model_validate_json(entry))
+            except ValueError:  # an entry from an older shape: skip it, don't fail the page
+                log.warning("outcomes.entry_unreadable")
+        return recent
