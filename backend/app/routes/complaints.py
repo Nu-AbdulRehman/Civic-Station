@@ -50,11 +50,11 @@ async def list_complaints(
     return ComplaintPage(items=[], total=0, page=page, page_size=page_size)
 
 
-@router.get("/{complaint_id}")
-async def get_complaint(complaint_id: UUID) -> Complaint:
-    return _stub_complaint(complaint_id)
+@router.get("/{id}")
+async def get_complaint(id: UUID) -> Complaint:
+    return _stub_complaint(id)
 
 
-@router.patch("/{complaint_id}/status")
-async def change_status(complaint_id: UUID, body: StatusUpdate) -> Complaint:
-    return _stub_complaint(complaint_id, body.status)
+@router.patch("/{id}/status")
+async def change_status(id: UUID, body: StatusUpdate) -> Complaint:
+    return _stub_complaint(id, body.status)
