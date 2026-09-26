@@ -266,3 +266,16 @@ Run through this, out loud, not just in your head:
 
 If any answer is "yes" where it shouldn't be, fix it before reporting completion. Don't
 report the task as done and mention the caveat afterward.
+
+## 8. Log every completed task in `docs/AI-USAGE.md`
+
+After you complete a task, append one entry to the `## Task log` section of
+`docs/AI-USAGE.md` before you report completion. Keep it to 1–2 lines: what you did and
+which files it touched, with any `T-M*-nnn`/`FR-*` id that applies. Format:
+
+```markdown
+- <date> · <branch> · <what was done, 1–2 lines>
+```
+
+This is separate from the per-skill entries required by §6 rule 3. Both go in the same
+file. A task with no entry is an undisclosed AI contribution (`FR-DOC-005`).

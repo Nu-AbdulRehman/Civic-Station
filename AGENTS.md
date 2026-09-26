@@ -154,6 +154,13 @@ authority. This is the reminder that the cadence applies to every session, not o
 first. Log every invocation in `docs/AI-USAGE.md` when it happens, including what you
 overrode and why.
 
+## Task log
+
+After you complete any task, append a 1–2 line entry to the `## Task log` section of
+`docs/AI-USAGE.md` before reporting completion:
+`- <date> · <branch> · <what was done>`. This is separate from the skill-invocation
+entries above. Full rule: `CLAUDE.md` §8.
+
 ## Definition of done for a phase
 
 "The code runs" is not enough. A phase is done when:
@@ -166,6 +173,8 @@ overrode and why.
 5. A handover file exists if the branch isn't merging immediately.
 6. `caveman`, `ponytail` (if a fork occurred), and `grilling` fired at their required
    points and are logged in `docs/AI-USAGE.md`, per `CLAUDE.md` §6.
+7. Every completed task has its entry in the `docs/AI-USAGE.md` task log, per
+   `CLAUDE.md` §8.
 
 ## Where to look when stuck
 
