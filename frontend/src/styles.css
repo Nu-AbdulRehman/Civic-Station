@@ -167,3 +167,42 @@ table.complaints td {
 .status-control .field-error {
   max-width: 16rem;
 }
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+}
+.badge-hit {
+  background: #2e7d32;
+}
+.badge-miss {
+  background: #b26a00;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+table.counts {
+  background: #fff;
+  border-collapse: collapse;
+  width: 100%;
+}
+table.counts caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5rem 0;
+}
+table.counts th,
+table.counts td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #dde1e6;
+  text-transform: capitalize;
+}
+table.counts td {
+  text-align: right;
+}

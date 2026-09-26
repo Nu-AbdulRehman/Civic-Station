@@ -108,6 +108,12 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   `StatusControl` offering every status and showing the 409 message verbatim, 5 component tests.
   Files: `frontend/src/{pages/DashboardPage,components/*}.tsx`, `frontend/src/styles.css`,
   `frontend/tests/{dashboardMock.ts,DashboardList.test.tsx,StatusConflict.test.tsx}`.
+- 2026-09-26 · feat/T-M1-010-stats-boundary · A17 (T-M1-010/011, FR-FE-010/011/017, AD-025):
+  `StatsPage` (total and three count tables in generated-enum order, refresh), `CacheBadge` from
+  `X-Cache` with fetch time, `ErrorBoundary` inside `<main>` with reset button and reset on
+  navigation, 4 component tests. Files: `frontend/src/{App.tsx,pages/StatsPage.tsx}`,
+  `frontend/src/components/{CacheBadge,ErrorBoundary}.tsx`, `frontend/src/styles.css`,
+  `frontend/tests/{StatsCache,ErrorBoundary}.test.tsx`.
 
 ## Skill invocations
 
@@ -255,3 +261,10 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **Tool:** Claude Code + `caveman`
 - **Shaped / Wrote:** Stripped task list for work package A16 (T-M1-007/008/009).
 - **I changed:** accepted as-is.
+
+### 2026-09-26 · feat/T-M1-010-stats-boundary
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A17 (T-M1-010/011).
+- **I changed:** The error boundary wraps the routed content inside `<main>` rather than the whole
+  router, so the navigation stays usable after a crash, which is what `FR-FE-017`'s acceptance
+  asserts; it resets on navigation as well as on its own button.
