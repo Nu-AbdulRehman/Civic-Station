@@ -21,3 +21,14 @@ DATABASE_URL=postgresql+asyncpg://<user>@<host>:<port>/civic_test \
 REDIS_URL=redis://<host>:<port>/0 \
 uv run pytest tests/integration
 ```
+
+## Frontend API types
+
+`frontend/src/api/types.ts` is generated from the backend's OpenAPI schema and committed; it is
+never edited by hand (`FR-FE-012`). After any backend contract change, regenerate it and let
+`tsc --noEmit` show what broke:
+
+```sh
+cd frontend && npm run gen:types   # exports the schema from the app factory; no server needed
+npm run typecheck
+```

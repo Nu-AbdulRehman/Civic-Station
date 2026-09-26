@@ -17,6 +17,7 @@ htmlcov/
 # Node
 node_modules/
 dist/
+coverage/
 
 # Editors / OS
 .idea/

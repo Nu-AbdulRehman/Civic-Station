@@ -90,6 +90,12 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   FR-BE-011(b) route-sweep test, three consecutive green runs (270 tests), index justification in
   `docs/ENGINEERING-NOTES.md`, `docs/failure-log.md` started. Files: `backend/pyproject.toml`,
   `backend/tests/unit/test_route_sweep.py`, `docs/ENGINEERING-NOTES.md`, `docs/failure-log.md`.
+- 2026-09-26 · feat/T-M1-001-frontend-scaffold · A14 (T-M1-001…004, FR-FE-012/013/014/016,
+  ADR-0002): Vite + React 18 + TS scaffold with three routes, `nginx.conf.template` and
+  `entrypoint.sh` (validated `BACKEND_ORIGIN`, single-variable `envsubst`), schema export script,
+  generated `types.ts` with runtime enum arrays, typed `api/client.ts`, `.gitattributes` for LF
+  scripts. Files: `frontend/**`, `scripts/export_openapi.py`, `.gitattributes`, `.gitignore`,
+  `README.md`.
 
 ## Skill invocations
 
@@ -215,3 +221,12 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   integration tests already carry up/down/up and seed-twice and hands over the command.
   `docs/failure-log.md` is created now rather than on day 1, with the failures this session hit,
   each dated and described as it happened; stated so the log is not mistaken for a contemporaneous one.
+
+### 2026-09-26 · feat/T-M1-001-frontend-scaffold
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A14 (T-M1-001…004).
+- **I changed:** `react-router` 7.18.4 instead of `react-router-dom` 6: v6 carries two open
+  advisories (open redirect, SSR constructor injection) that the Trivy job would flag, and
+  `AD-037` names `react-router`. `@vitejs/plugin-react` pinned to 4.7.0, the last line whose peer
+  range includes Vite 6. The OpenAPI schema is exported by `scripts/export_openapi.py` from the app
+  factory, so regenerating types needs no running backend and no `localhost` URL in `frontend/`.
