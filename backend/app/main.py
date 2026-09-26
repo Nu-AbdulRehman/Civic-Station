@@ -9,6 +9,7 @@ from app.observability.logging import configure_logging
 from app.observability.middleware import RequestMiddleware
 from app.providers.cache.client import make_redis
 from app.providers.cache.ratelimit import RedisRateLimiter
+from app.providers.triage.factory import build_triage_provider
 from app.routes import complaints, meta, ops, stats
 
 
@@ -17,6 +18,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logging(settings.log_level)
     app = FastAPI(title="Civic-Station", version=settings.app_version)
     app.state.settings = settings
+    app.state.triage_provider = build_triage_provider(settings)  # resolution failure = no boot
     # redis-py connects lazily, so building the client here opens no connection.
     # ponytail: closed in lifespan shutdown once T-M2-012 lands.
     redis = make_redis(settings.redis_url)

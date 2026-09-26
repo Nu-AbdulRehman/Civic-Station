@@ -6,7 +6,6 @@ spread of statuses. Attribution is `rules`, because no model ever saw them (BR-V
 """
 
 import asyncio
-import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid5
@@ -18,6 +17,7 @@ from app.config import DatabaseSettings
 from app.db.models import ComplaintRow
 from app.domain.enums import Category, Priority, Status
 from app.observability.logging import configure_logging, get_logger
+from app.providers.triage.rules import summarise
 
 # Fixed literal, never per machine, so ids are reproducible everywhere (AD-022).
 SEED_UUID_NAMESPACE = UUID("6f2a1c94-3e5b-4d80-9a17-c0b8e4f21d63")
@@ -59,14 +59,6 @@ SEED: list[tuple[str, str, str, str, str, str | None]] = [
     ("Park ki boundary wall broken, drug addicts sitting inside at night.", "Nazimabad No. 2", "other", "normal", "resolved", None),
     ("Signboard of our street fallen, delivery riders cannot find address.", "Mehmoodabad", "other", "low", "open", None),
 ]  # fmt: skip
-
-
-def summarise(category: str, text: str) -> str:
-    """AD-023's rules-path summary, so seeded rows look like what the rules path produces."""
-    end = re.search(r"[.!?\n]", text)
-    first = (text[: end.start()] if end else text)[:120]
-    summary = f"{category}: {' '.join(first.split())}"
-    return summary if len(summary) <= 140 else summary[:140].rsplit(" ", 1)[0]
 
 
 def seed_rows() -> list[dict[str, Any]]:

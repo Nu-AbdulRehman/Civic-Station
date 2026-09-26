@@ -46,6 +46,12 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   fail-open path, single client-IP resolver, `TRUSTED_PROXY_CIDRS` validation, rate-limit
   dependency on `POST /api/complaints` only. Files: `backend/app/{client_ip,config,deps,main}.py`,
   `backend/app/providers/cache/*`, `backend/app/routes/complaints.py`, `backend/tests/**`.
+- 2026-09-26 · feat/T-M5-001-triage-contracts · A7 (T-M5-001…005, FR-AI-001…004, BR-TRIAGE-009/
+  015, ADR-0004, AD-023/026/060): `TriageProvider`/`TriageOutcome`, `RuleBasedTriage`,
+  `SimulatedTriage` (four modes, pinned output), `redact()`, factory wired into `app.state`;
+  version/meta report the active provider; seed reuses the rules summary. Files:
+  `backend/app/providers/triage/*`, `backend/app/{deps,main}.py`, `backend/app/routes/meta.py`,
+  `backend/seeds/complaints.py`, `backend/tests/unit/test_triage_providers.py`.
 
 ## Skill invocations
 
@@ -105,3 +111,15 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **I changed:** Key shape `cs:ratelimit:<ip>:<window>` from `00-conventions.md` §7 and
   `05-M4-cache.md`, not `cs:rl:<ip>:<epoch_minute>` from `FR-CACHE-003`: conventions outrank the
   requirement text in the reading order, and a configurable window cannot be keyed by minute.
+
+### 2026-09-26 · feat/T-M5-001-triage-contracts
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A7 (T-M5-001…005).
+- **I changed:** `llm` and `ollama` resolve in the factory but exit at startup with a message until
+  T-M5-008/009 exist, rather than silently falling back to another provider (`FR-BE-018`).
+
+### 2026-09-26 · feat/T-M5-001-triage-contracts
+- **Tool:** Claude Code + `ponytail`
+- **Shaped / Wrote:** Decision stub `AD-060` (providers validate at their boundary; the pipeline
+  maps `ValidationError` to `ValidationFailed` and re-validates).
+- **I changed:** accepted as-is.
