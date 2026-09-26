@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.domain.enums import Status
 from app.domain.errors import InvalidTransitionError, RateLimitExceededError
+from app.domain.models import ErrorResponse
 
 VALID = {"text": "Water pipe burst on main road", "location": "G-9 Markaz"}
 
@@ -20,6 +21,7 @@ def assert_envelope(r: httpx2.Response, status: int, code: str) -> dict[str, Any
     assert body["error"]["code"] == code
     assert isinstance(body["error"]["message"], str) and body["error"]["message"]
     assert body["request_id"] == r.headers["x-request-id"]
+    ErrorResponse.model_validate(body)  # the body is what the OpenAPI schema documents
     return body
 
 

@@ -11,7 +11,19 @@ from app.services.stats import StatsService
 router = APIRouter(prefix="/api", tags=["stats"])
 
 
-@router.get("/stats")
+@router.get(
+    "/stats",
+    responses={
+        200: {
+            "headers": {
+                "X-Cache": {
+                    "description": "HIT if served from Redis, MISS if computed",
+                    "schema": {"type": "string", "enum": ["HIT", "MISS"]},
+                }
+            }
+        }
+    },
+)
 async def get_stats(
     response: Response, service: Annotated[StatsService, Depends(get_stats_service)]
 ) -> Stats:

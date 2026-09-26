@@ -247,10 +247,32 @@ export interface components {
          * @enum {string}
          */
         ErrorClass: "Timeout" | "RateLimited" | "ServerError" | "ValidationFailed" | "Other";
-        /** HTTPValidationError */
-        HTTPValidationError: {
+        /** ErrorDetail */
+        ErrorDetail: {
+            /** Code */
+            code: string;
+            /** Fields */
+            fields?: components["schemas"]["FieldError"][] | null;
+            /** Message */
+            message: string;
+        };
+        /**
+         * ErrorResponse
+         * @description The single error body for the whole API (00-conventions §4).
+         */
+        ErrorResponse: {
+            error: components["schemas"]["ErrorDetail"];
+            /** Request Id */
+            request_id: string | null;
+        };
+        /** FieldError */
+        FieldError: {
             /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
+            detail: string;
+            /** Field */
+            field: string;
+            /** Rule */
+            rule: string;
         };
         /** HealthStatus */
         HealthStatus: {
@@ -296,6 +318,19 @@ export interface components {
             recent: components["schemas"]["ProviderOutcome"][];
         };
         /**
+         * ReadinessFailure
+         * @description The 503 body of /ready: the error envelope plus which dependency failed.
+         */
+        ReadinessFailure: {
+            /** Checks */
+            checks: {
+                [key: string]: "ok" | "fail";
+            };
+            error: components["schemas"]["ErrorDetail"];
+            /** Request Id */
+            request_id: string | null;
+        };
+        /**
          * Stats
          * @description Every enum key always present with an explicit zero (AD-025).
          */
@@ -336,19 +371,6 @@ export interface components {
          * @enum {string}
          */
         TriagedBy: "llm:groq" | "llm:ollama" | "rules" | "rules:fallback" | "simulated";
-        /** ValidationError */
-        ValidationError: {
-            /** Context */
-            ctx?: Record<string, never>;
-            /** Input */
-            input?: unknown;
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-        };
         /** VersionInfo */
         VersionInfo: {
             provider: components["schemas"]["TriagedBy"];
@@ -388,13 +410,13 @@ export interface operations {
                     "application/json": components["schemas"]["ComplaintPage"];
                 };
             };
-            /** @description Validation Error */
-            422: {
+            /** @description Validation failed; `error.fields` names each offending field */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -415,19 +437,50 @@ export interface operations {
             /** @description Successful Response */
             201: {
                 headers: {
+                    /** @description URL of the created complaint */
+                    Location?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["Complaint"];
                 };
             };
-            /** @description Validation Error */
-            422: {
+            /** @description Validation failed; `error.fields` names each offending field */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request body exceeds 64 KiB */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content-Type is not application/json */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited; retry after `Retry-After` seconds */
+            429: {
+                headers: {
+                    /** @description Whole seconds remaining in the current window */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -452,13 +505,22 @@ export interface operations {
                     "application/json": components["schemas"]["Complaint"];
                 };
             };
-            /** @description Validation Error */
-            422: {
+            /** @description Validation failed; `error.fields` names each offending field */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Complaint not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -487,13 +549,49 @@ export interface operations {
                     "application/json": components["schemas"]["Complaint"];
                 };
             };
-            /** @description Validation Error */
-            422: {
+            /** @description Validation failed; `error.fields` names each offending field */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Complaint not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Transition not permitted; `error.message` names both statuses */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Request body exceeds 64 KiB */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content-Type is not application/json */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -530,6 +628,8 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    /** @description HIT if served from Redis, MISS if computed */
+                    "X-Cache"?: "HIT" | "MISS";
                     [name: string]: unknown;
                 };
                 content: {
@@ -614,12 +714,14 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-            /** @description A dependency is unreachable; names which one */
+            /** @description A dependency is unreachable; names it */
             503: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReadinessFailure"];
+                };
             };
         };
     };
@@ -632,9 +734,11 @@ type ReadonlyArray<T> = [
 ] extends [
     unknown[]
 ] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const pathsApiStatsGetResponses200HeadersXCacheValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/stats"]["get"]["responses"]["200"]["headers"]["X-Cache"]> = ["HIT", "MISS"];
 export const categoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Category"]> = ["water", "electricity", "sanitation", "roads", "streetlights", "other"];
 export const configuredProviderValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConfiguredProvider"]> = ["llm", "ollama", "rules", "simulated"];
 export const errorClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ErrorClass"]> = ["Timeout", "RateLimited", "ServerError", "ValidationFailed", "Other"];
 export const priorityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Priority"]> = ["high", "normal", "low"];
+export const readinessFailureChecksValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReadinessFailure"]["checks"][string]> = ["ok", "fail"];
 export const statusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Status"]> = ["open", "in_progress", "resolved", "rejected"];
 export const triagedByValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TriagedBy"]> = ["llm:groq", "llm:ollama", "rules", "rules:fallback", "simulated"];

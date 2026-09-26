@@ -1,9 +1,11 @@
 """App factory. Run with: uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000"""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 
 from app.config import Settings, load_settings
 from app.db.session import make_engine, make_session_factory
@@ -51,6 +53,25 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     log.info("shutdown.completed")
 
 
+def _openapi_without_422(app: FastAPI) -> Callable[[], dict[str, Any]]:
+    """FastAPI documents a 422 on every route with parameters, but the error handler turns every
+    validation failure into a 400 with the one envelope (FR-BE-002). Document what is sent:
+    drop the 422s and the schemas only they used; routes declare their real errors."""
+
+    def openapi() -> dict[str, Any]:
+        if app.openapi_schema is None:
+            schema = get_openapi(title=app.title, version=app.version, routes=app.routes)
+            for operations in schema["paths"].values():
+                for operation in operations.values():
+                    operation["responses"].pop("422", None)
+            for unused in ("HTTPValidationError", "ValidationError"):
+                schema["components"]["schemas"].pop(unused, None)
+            app.openapi_schema = schema
+        return app.openapi_schema
+
+    return openapi
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or load_settings()
     configure_logging(settings.log_level)
@@ -96,6 +117,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for router in (complaints.router, stats.router, meta.router, ops.router, metrics.router):
         app.include_router(router)
     register_error_handlers(app)
+    app.openapi = _openapi_without_422(app)  # type: ignore[method-assign]
     # add_middleware prepends: the last one added is the outermost. CORS must be outermost.
     app.add_middleware(RequestMiddleware)
     app.add_middleware(

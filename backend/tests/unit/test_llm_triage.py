@@ -29,7 +29,7 @@ def completion(content: str) -> dict[str, Any]:
         "id": "c1",
         "object": "chat.completion",
         "created": 0,
-        "model": "llama-3.1-8b-instant",
+        "model": "qwen/qwen3.8-27b",
         "choices": [
             {
                 "index": 0,
@@ -61,7 +61,7 @@ async def test_request_shape_is_fixed() -> None:
     result = await provider.triage("Water main burst on Street 12", "Saddar")
     assert result.category.value == "water" and provider.name == "llm:groq"
     body = json.loads(seen[0].content)
-    assert body["model"] == "llama-3.1-8b-instant"
+    assert body["model"] == "qwen/qwen3.8-27b"
     assert body["response_format"] == {"type": "json_object"}
     assert (body["temperature"], body["max_tokens"]) == (0, 200)
     assert OPEN in body["messages"][1]["content"]

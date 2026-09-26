@@ -20,11 +20,8 @@ export type TriagedBy = Schemas["TriagedBy"];
 
 const BASE = "/api";
 
-export interface FieldError {
-  field: string;
-  rule: string;
-  detail: string;
-}
+export type FieldError = Schemas["FieldError"];
+type ErrorResponse = Schemas["ErrorResponse"];
 
 /** Every non-2xx response becomes one of these; components never inspect a raw response. */
 export class ApiError extends Error {
@@ -47,9 +44,9 @@ async function toApiError(response: Response, sentId: string): Promise<ApiError>
   const retryAfterSeconds = retryAfter !== null && /^\d+$/.test(retryAfter) ? Number(retryAfter) : null;
   try {
     // 00-conventions §4: { error: { code, message, fields? }, request_id }
-    const body = (await response.json()) as {
-      error?: { code?: string; message?: string; fields?: FieldError[] };
-      request_id?: string;
+    // Partial: a proxy error page or a truncated body must still produce a typed error.
+    const body = (await response.json()) as Partial<ErrorResponse> & {
+      error?: Partial<ErrorResponse["error"]>;
     };
     return new ApiError(
       response.status,

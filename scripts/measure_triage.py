@@ -53,7 +53,7 @@ def _percentile(values: list[float], p: float) -> float:
     return ordered[min(len(ordered) - 1, round(p * (len(ordered) - 1)))]
 
 
-async def _run_provider() -> list[dict[str, Any]]:
+async def _run_provider(interval: float) -> list[dict[str, Any]]:
     settings = load_settings()
     provider = build_triage_provider(settings)
     pipeline = TriagePipeline(
@@ -64,7 +64,10 @@ async def _run_provider() -> list[dict[str, Any]]:
         prompt_version=settings.prompt_version,
     )
     rows = []
-    for text, location, category, priority, _status, _contact in SEED:
+    for i, (text, location, category, priority, _status, _contact) in enumerate(SEED):
+        if i and interval:
+            # Pace under the provider's quota: a 429 here would measure the quota, not the model.
+            await asyncio.sleep(interval)
         outcome = await pipeline.run(text, location)
         rows.append(
             {
@@ -99,8 +102,8 @@ def _summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def cmd_provider(out: Path) -> None:
-    rows = asyncio.run(_run_provider())
+def cmd_provider(out: Path, interval: float) -> None:
+    rows = asyncio.run(_run_provider(interval))
     summary = _summary(rows)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
@@ -184,6 +187,7 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("provider")
     p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--interval", type=float, default=0.0, help="seconds between calls")
     c = sub.add_parser("compare")
     c.add_argument("a", type=Path)
     c.add_argument("b", type=Path)
@@ -191,7 +195,7 @@ def main() -> None:
     k.add_argument("--base-url", required=True)
     args = parser.parse_args()
     if args.command == "provider":
-        cmd_provider(args.out)
+        cmd_provider(args.out, args.interval)
     elif args.command == "compare":
         cmd_compare(args.a, args.b)
     else:

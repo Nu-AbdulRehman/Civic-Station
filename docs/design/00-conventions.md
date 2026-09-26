@@ -89,7 +89,7 @@ One typed settings object, constructed once at startup from the environment. No 
 | `TRIAGE_PROVIDER` | `rules` | M5.1 | One of `llm`, `ollama`, `rules`, `simulated`. Unknown → startup failure naming the variable and listing the legal values. |
 | `GROQ_API_KEY` | — | M5.2 | Required only when `TRIAGE_PROVIDER=llm`. Never logged. |
 | `GROQ_BASE_URL` | `https://api.groq.com/openai/v1` | M5.2 | |
-| `TRIAGE_MODEL` | `llama-3.1-8b-instant` | M5.2 | Pinned by name (`AD-045`). Also recorded in `docs/TRIAGE.md`. |
+| `TRIAGE_MODEL` | `qwen/qwen3.8-27b` | M5.2 | Pinned by name (`AD-045`). Also recorded in `docs/TRIAGE.md`. |
 | `OLLAMA_BASE_URL` | `http://ollama:11434` | M5.3 | |
 | `OLLAMA_MODEL` | `llama3.2:1b` | M5.3 | Pinned by name (`AD-045`). |
 | `TRIAGE_TIMEOUT_SECONDS` | `10` | M5.6 | Hard cap per outbound call. **Refused above 15** by a settings validator (`BR-TRIAGE-008`), because the whole-operation worst case is two calls plus jitter and must stay under the 31 s ceiling the frontend and any proxy read timeout assume. |

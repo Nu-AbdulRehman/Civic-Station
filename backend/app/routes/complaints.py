@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from app.deps import enforce_rate_limit, get_complaint_service
 from app.domain.enums import Category, Priority, Status
 from app.domain.models import Complaint, ComplaintCreate, ComplaintPage, StatusUpdate
+from app.errors import error_responses
 from app.services.complaints import ComplaintService
 
 router = APIRouter(prefix="/api/complaints", tags=["complaints"])
@@ -19,6 +20,17 @@ Service = Annotated[ComplaintService, Depends(get_complaint_service)]
     "",
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(enforce_rate_limit)],
+    responses={
+        201: {
+            "headers": {
+                "Location": {
+                    "description": "URL of the created complaint",
+                    "schema": {"type": "string"},
+                }
+            }
+        },
+        **error_responses(400, 413, 415, 429),
+    },
 )
 async def create_complaint(
     body: ComplaintCreate, response: Response, service: Service
@@ -28,7 +40,7 @@ async def create_complaint(
     return complaint
 
 
-@router.get("")
+@router.get("", responses=error_responses(400))
 async def list_complaints(
     service: Service,
     category: Category | None = None,
@@ -43,11 +55,11 @@ async def list_complaints(
     return ComplaintPage(items=items, total=total, page=page, page_size=page_size)
 
 
-@router.get("/{id}")
+@router.get("/{id}", responses=error_responses(400, 404))
 async def get_complaint(id: UUID, service: Service) -> Complaint:
     return await service.get(id)
 
 
-@router.patch("/{id}/status")
+@router.patch("/{id}/status", responses=error_responses(400, 404, 409, 413, 415))
 async def change_status(id: UUID, body: StatusUpdate, service: Service) -> Complaint:
     return await service.change_status(id, body.status)
