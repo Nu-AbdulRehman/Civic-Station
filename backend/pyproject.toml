@@ -41,6 +41,10 @@ target-version = "py312"
 select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
 ignore = ["S101"]
 
+[tool.ruff.lint.per-file-ignores]
+# One fixture row per line reads as a table; wrapping 30 rows hides the distribution.
+"seeds/complaints.py" = ["E501"]
+
 [tool.ruff.lint.isort]
 # backend/alembic/ (migrations) would otherwise shadow the installed package for isort.
 known-third-party = ["alembic"]

@@ -31,6 +31,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   every CHECK, three indexes, strict type drop), `Mapped` ORM model, engine factory,
   `DatabaseSettings`, 20 integration tests against real PostgreSQL. Files: `backend/alembic*`,
   `backend/app/{config.py,db/*}`, `backend/tests/integration/*`, `backend/pyproject.toml`.
+- 2026-09-26 · feat/T-M2-006-repositories-seed · A4 (T-M2-006, T-M3-005/006, FR-BE-016/017,
+  FR-DATA-004, BR-STATUS-006/007, AD-016/022/059): `ComplaintRepository` (create, get, filtered
+  page + total, locked status change, GROUP BY counts), 30-row idempotent seed, migrate/seed
+  commands in `README.md`, 13 integration tests. Files: `backend/app/repositories/complaints.py`,
+  `backend/seeds/*`, `backend/tests/integration/*`, `README.md`, `OPEN-DECISIONS.md`.
 
 ## Skill invocations
 
@@ -64,3 +69,15 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **I changed:** Put all three indexes in revision `0001`, following `04-M3-data.md` §2.3 and
   `FR-DATA-003`/`AD-049`; the same document's task table still says "Revision 0002: the two
   indexes" (T-M3-004), which §2.3 itself calls the stale wording. `0002` stays reserved.
+
+### 2026-09-26 · feat/T-M2-006-repositories-seed
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A4 (T-M2-006, T-M3-005/006).
+- **I changed:** T-M3-006 reduced to documenting the migrate and seed commands in `README.md`:
+  there is no `compose.yaml` yet, and wiring it is T-M6-006 (Dev 2, `AD-013`).
+
+### 2026-09-26 · feat/T-M2-006-repositories-seed
+- **Tool:** Claude Code + `ponytail`
+- **Shaped / Wrote:** Decision stub `AD-059` (the repository owns the transaction; status change
+  is lock, check, update in one method).
+- **I changed:** accepted as-is.
