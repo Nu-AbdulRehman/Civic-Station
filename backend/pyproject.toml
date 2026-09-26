@@ -55,3 +55,12 @@ known-third-party = ["alembic"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 65  # FR-BE-027 / NFR-TEST-003; enforced by `pytest --cov` in the test-backend job
+show_missing = true
+skip_covered = true

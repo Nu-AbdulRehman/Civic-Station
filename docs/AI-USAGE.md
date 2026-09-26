@@ -85,6 +85,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   mocked-transport tests. Files: `backend/app/providers/triage/{ollama,llm,factory}.py`,
   `backend/app/main.py`, `backend/tests/unit/test_{ollama_triage,triage_providers}.py`,
   `backend/pyproject.toml`.
+- 2026-09-26 · test/T-M2-015-suite-threshold · A13 (T-M2-015, T-M5-011/012, T-M3-007/008,
+  FR-BE-011/027, NFR-TEST-003): coverage gate (`fail_under = 65`, measured 98.3 % branch),
+  FR-BE-011(b) route-sweep test, three consecutive green runs (270 tests), index justification in
+  `docs/ENGINEERING-NOTES.md`, `docs/failure-log.md` started. Files: `backend/pyproject.toml`,
+  `backend/tests/unit/test_route_sweep.py`, `docs/ENGINEERING-NOTES.md`, `docs/failure-log.md`.
 
 ## Skill invocations
 
@@ -202,3 +207,11 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   `make pull-models` volume (P9/T-M6-010, Dev 2); A12 delivers the provider against Ollama's
   `/api/chat` contract, proven on a mocked transport. `httpx` moves from a dev-only to a runtime
   dependency, as `AD-005` prescribes it for this provider.
+
+### 2026-09-26 · test/T-M2-015-suite-threshold
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A13 (T-M2-015, T-M5-011/012, T-M3-007/008).
+- **I changed:** T-M3-007's "CI job step" lives in `ci.yml` (Dev 2, P10); A13 confirms the
+  integration tests already carry up/down/up and seed-twice and hands over the command.
+  `docs/failure-log.md` is created now rather than on day 1, with the failures this session hit,
+  each dated and described as it happened; stated so the log is not mistaken for a contemporaneous one.
