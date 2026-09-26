@@ -4,8 +4,9 @@ from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
+from app.deps import enforce_rate_limit
 from app.domain.enums import Category, Priority, Status, TriagedBy
 from app.domain.models import Complaint, ComplaintCreate, ComplaintPage, StatusUpdate
 
@@ -32,7 +33,11 @@ def _stub_complaint(complaint_id: UUID, complaint_status: Status = Status.OPEN) 
     )
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(enforce_rate_limit)],
+)
 async def create_complaint(body: ComplaintCreate, response: Response) -> Complaint:
     complaint = _stub_complaint(uuid4())
     response.headers["Location"] = f"/api/complaints/{complaint.id}"

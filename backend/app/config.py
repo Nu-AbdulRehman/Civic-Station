@@ -1,8 +1,9 @@
 """The one typed settings object (FR-BE-020). No other module reads the environment."""
 
+from ipaddress import IPv4Network, IPv6Network, ip_network
 from typing import Literal, Self
 
-from pydantic import Field, SecretStr, ValidationError, model_validator
+from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 from app.domain.enums import ConfiguredProvider
@@ -49,6 +50,18 @@ class Settings(DatabaseSettings):
         if self.triage_provider is ConfiguredProvider.LLM and not self.groq_api_key:
             raise ValueError("GROQ_API_KEY is required when TRIAGE_PROVIDER=llm")
         return self
+
+    @field_validator("trusted_proxy_cidrs")
+    @classmethod
+    def _cidrs_parse(cls, value: str) -> str:
+        for cidr in value.split(","):
+            if cidr.strip():
+                ip_network(cidr.strip())  # ValueError names the bad entry
+        return value
+
+    @property
+    def trusted_proxy_networks(self) -> list[IPv4Network | IPv6Network]:
+        return [ip_network(c.strip()) for c in self.trusted_proxy_cidrs.split(",") if c.strip()]
 
     @property
     def cors_origins(self) -> list[str]:

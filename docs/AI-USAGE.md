@@ -41,6 +41,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   `StatsCachePort`, `RedisStatsCache` (read-through, 30 s TTL, single-flight lock, fail-soft
   invalidate), 4 integration tests on real Redis. Files: `backend/app/providers/cache/*`,
   `backend/tests/integration/test_stats_cache.py`, `backend/pyproject.toml`.
+- 2026-09-26 · feat/T-M4-004-rate-limiter · A6 (T-M4-004/005, FR-CACHE-003, BR-CACHE-004/005/
+  006/007, AD-008/018/054): Redis fixed-window limiter (INCR + EXPIRE NX, fake-clock tested),
+  fail-open path, single client-IP resolver, `TRUSTED_PROXY_CIDRS` validation, rate-limit
+  dependency on `POST /api/complaints` only. Files: `backend/app/{client_ip,config,deps,main}.py`,
+  `backend/app/providers/cache/*`, `backend/app/routes/complaints.py`, `backend/tests/**`.
 
 ## Skill invocations
 
@@ -93,3 +98,10 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
 - **I changed:** Contract tests 11 and 12 need `StatsService` and `ComplaintService` (T-M2-008/009,
   package A10), so A5 delivers the port, the read-through with single-flight, and `invalidate()`,
   proven by integration tests against real Redis; the route and service wiring lands in A10.
+
+### 2026-09-26 · feat/T-M4-004-rate-limiter
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A6 (T-M4-004/005).
+- **I changed:** Key shape `cs:ratelimit:<ip>:<window>` from `00-conventions.md` §7 and
+  `05-M4-cache.md`, not `cs:rl:<ip>:<epoch_minute>` from `FR-CACHE-003`: conventions outrank the
+  requirement text in the reading order, and a configurable window cannot be keyed by minute.

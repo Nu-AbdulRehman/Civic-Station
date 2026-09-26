@@ -14,3 +14,9 @@ class StatsCachePort(Protocol):
     async def invalidate(self) -> None:
         """Drop the cached stats after a write (BR-CACHE-001, AD-024). Never raises."""
         ...
+
+
+class RateLimiterPort(Protocol):
+    async def check(self, client_ip: str) -> None:
+        """Raise RateLimitExceededError when over the limit. Fails open if Redis is down."""
+        ...
