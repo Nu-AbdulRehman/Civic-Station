@@ -102,6 +102,12 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   the client, Vitest + Testing Library with 12 tests across five files. Files: `frontend/src/**`,
   `frontend/tests/*`, `frontend/{package.json,package-lock.json,vite.config.ts,tsconfig.json}`,
   `docs/failure-log.md`.
+- 2026-09-26 · feat/T-M1-007-dashboard · A16 (T-M1-007/008/009, FR-FE-006…009, BR-STATUS-005,
+  BR-VOCAB-005): `DashboardPage` (server-side list, fixed page size, abort stale queries),
+  `FilterBar` from generated enum arrays with reset to page 1, `Pagination` on server `total`,
+  `StatusControl` offering every status and showing the 409 message verbatim, 5 component tests.
+  Files: `frontend/src/{pages/DashboardPage,components/*}.tsx`, `frontend/src/styles.css`,
+  `frontend/tests/{dashboardMock.ts,DashboardList.test.tsx,StatusConflict.test.tsx}`.
 
 ## Skill invocations
 
@@ -244,3 +250,8 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   (`ComplaintCreate.minLength/maxLength`) instead of literal numbers, so the mirror of `BR-VAL-001/002`
   cannot drift from the server. `vitest` 5.0.2 instead of 3.x: 3.x pulls `@vitest/mocker` with a
   moderate advisory, 5.x supports Vite 6 and audits clean.
+
+### 2026-09-26 · feat/T-M1-007-dashboard
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for work package A16 (T-M1-007/008/009).
+- **I changed:** accepted as-is.
