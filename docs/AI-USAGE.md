@@ -145,6 +145,10 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   Compose part, T-M4-009): backend and frontend Dockerfiles + `.dockerignore`, `compose.yaml`
   (5 services + migrate + ollama-pull, 3 networks, 3 volumes), `compose.prod.yaml`, `.env.example`,
   `Makefile`, README quickstart, isolation evidence, notes, AD-062/063, `docs/handover/DEV2-STATUS.md`.
+- 2026-09-26 · docs/handoff-dev2 · Wrote `docs/handover/handoff.md` for Dev 2 and their agent: the
+  stacked-branch chain and its merge rules (in order, merge commits only, CI first), the CI command
+  set, image/Compose/k8s facts about the application, Dev 1 checks that need Dev 2's services,
+  decisions to review, and gotchas. Files: `docs/handover/handoff.md`.
 
 ## Skill invocations
 
