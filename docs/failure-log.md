@@ -38,3 +38,8 @@ reconstructed from memory; from here on, entries are appended as the failure hap
 - **Symptom:** every `SubmitErrors` test failed with the `ApiError` it had passed to `mockRejectedValue`, although the page rendered the right state.
 - **Wrongly believed:** vitest 5's `mockRejectedValue` creates its rejected promise eagerly and the runner reports it as unhandled; a workaround was written on that basis.
 - **Truth:** `beforeEach(() => vi.mocked(fn).mockReset())` *returns* the mock, and vitest runs a function returned from `beforeEach` as teardown — so after each test it called the mock, which threw. Isolated by a debug test that passed without the `beforeEach`. Fixed with block-bodied hooks; the workaround and its wrong explanation were removed.
+
+### 2026-09-26 · A19 follow-up · Live Groq smoke run fell back to rules on every call
+- **Symptom:** with a valid key, `POST /api/complaints` returned 201 but `triaged_by: rules:fallback`, `error_class: Other`.
+- **Wrongly believed:** the key was wrong (401), which would also classify as `Other`.
+- **Truth:** a direct `LLMTriage` call surfaced `404 model_not_found` for the pinned `llama-3.1-8b-instant`; `GET /models` showed Groq no longer serves a Llama chat model. The resilience path did its job — the citizen got a 201 — but it also hid the cause behind `Other`. The model was replaced with `qwen/qwen3.8-27b` after measuring both live candidates (`AD-045` revised). Lesson: a pinned hosted model is a dependency that can disappear; the smoke run is what catches it.

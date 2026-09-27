@@ -13,6 +13,7 @@ from app.domain.errors import (
     InvalidTransitionError,
     RateLimitExceededError,
 )
+from app.domain.models import ErrorResponse
 from app.observability.logging import get_logger
 
 log = get_logger(__name__)
@@ -90,3 +91,32 @@ def register_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ComplaintNotFoundError, _not_found)
     app.add_exception_handler(InvalidTransitionError, _invalid_transition)
     app.add_exception_handler(RateLimitExceededError, _rate_limited)
+
+
+# --- the schema side of the same contract --------------------------------------------------------
+
+_DESCRIPTIONS = {
+    400: "Validation failed; `error.fields` names each offending field",
+    404: "Complaint not found",
+    409: "Transition not permitted; `error.message` names both statuses",
+    413: "Request body exceeds 64 KiB",
+    415: "Content-Type is not application/json",
+    429: "Rate limited; retry after `Retry-After` seconds",
+}
+
+
+def error_responses(*codes: int) -> dict[int | str, dict[str, Any]]:
+    """OpenAPI `responses=` for the error statuses a route can return, all in the one envelope,
+    so the generated frontend types describe the errors the API really sends (FR-FE-012)."""
+    responses: dict[int | str, dict[str, Any]] = {}
+    for code in codes:
+        entry: dict[str, Any] = {"model": ErrorResponse, "description": _DESCRIPTIONS[code]}
+        if code == 429:
+            entry["headers"] = {
+                "Retry-After": {
+                    "description": "Whole seconds remaining in the current window",
+                    "schema": {"type": "integer"},
+                }
+            }
+        responses[code] = entry
+    return responses

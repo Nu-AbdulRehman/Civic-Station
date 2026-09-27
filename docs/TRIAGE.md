@@ -2,9 +2,9 @@
 
 How complaints are classified, what the model is told, and what was measured (`AD-052`,
 `FR-AI-013`). Every number here was produced by a command in this repository and states the
-date and the provider it came from. **Where a measurement needs a live Groq key or pulled
-Ollama weights and has not been run yet, the section says so and gives the command** —
-a placeholder number would be worse than none.
+date and the provider it came from. **Where a measurement still needs pulled Ollama
+weights and has not been run yet, the section says so and gives the command** — a placeholder
+number would be worse than none.
 
 Measurement tool: `scripts/measure_triage.py` (run from `backend/`). Raw results:
 `docs/evidence/triage-*.json`.
@@ -15,13 +15,16 @@ Measurement tool: `scripts/measure_triage.py` (run from `backend/`). Raw results
 
 | Provider | `TRIAGE_PROVIDER` | Model | Set by | `triaged_by` |
 |---|---|---|---|---|
-| Groq (hosted) | `llm` | `llama-3.1-8b-instant` | `TRIAGE_MODEL` | `llm:groq` |
+| Groq (hosted) | `llm` | `qwen/qwen3.8-27b` | `TRIAGE_MODEL` | `llm:groq` |
 | Ollama (local, offline) | `ollama` | `llama3.2:1b` | `OLLAMA_MODEL` | `llm:ollama` |
 | Keyword rules | `rules` | — | — | `rules`, or `rules:fallback` when reached by fallback |
 | Simulated (CI) | `simulated` | — | `SIMULATED_SEED` | `simulated` |
 
 Both model names are the defaults in `backend/app/config.py` and in `00-conventions.md` §3
-(`AD-045`). Request parameters are identical on both LLM paths: JSON mode
+(`AD-045`). **The Groq model was changed on 2026-09-26:** the originally pinned
+`llama-3.1-8b-instant` returned `404 model_not_found` in the first live smoke run, because Groq no
+longer serves a Llama chat model on this account. `qwen/qwen3.8-27b` replaced it after both live
+candidates were measured (§7); `AD-045` records the revision and the rejected alternative. Request parameters are identical on both LLM paths: JSON mode
 (`response_format={"type": "json_object"}` on Groq, `format: "json"` on Ollama),
 `temperature=0`, and a 200-token cap (`max_tokens` / `num_predict`)
 (`backend/app/providers/triage/llm.py`, `backend/app/providers/triage/ollama.py`).
@@ -82,11 +85,22 @@ failure goes straight to the rules fallback with no retry and no re-prompt (`AD-
 
 ## 4. Observed provider rate limits, with the date seen
 
-**Pending — needs a live Groq key.** The figure must be the one observed on the account, not
-a remembered one (`AD-006`), because `AD-017`'s limit of 10 submissions per minute per client
-is only defensible against it. To record it: send a request with the key and read the
-`x-ratelimit-limit-requests` / `x-ratelimit-limit-tokens` response headers, then write them
-here with the date.
+Observed **2026-09-26** on the team's Groq key, from the `x-ratelimit-*` response headers of a
+request to `qwen/qwen3.8-27b`:
+
+| Limit | Value | Header |
+|---|---|---|
+| Requests | **1,000** per window (reset shown in minutes, consistent with a daily window) | `x-ratelimit-limit-requests` |
+| Tokens | **8,000 per minute** | `x-ratelimit-limit-tokens` |
+
+**What this means for `AD-017`.** One triage call is roughly 600–700 tokens (system prompt,
+wrapped complaint, a 200-token cap on the reply), so 8,000 tokens per minute is about **11 calls a
+minute for the whole system**. The rate limiter allows 10 submissions per minute *per client IP*,
+so two busy clients are enough to reach Groq's quota. Nothing breaks when that happens — the
+pipeline honours `Retry-After` (capped at 5 s), retries once, and falls back to rules with a 201
+(`BR-TRIAGE-005/006`) — but classification quality drops to the keyword floor for the overflow.
+The per-IP limit protects against one abusive client, not against aggregate spend; that residual
+risk is the one `docs/NON-GOALS.md` records. Re-verify these figures before submission.
 
 ## 5. Measured triage cache hit rate
 
@@ -115,7 +129,7 @@ the key, so the Groq figure should match; re-run it with `TRIAGE_PROVIDER=llm` t
 |---|---|---|---|
 | `rules` | 0 / 30 | 30 seeded complaints | 2026-09-26 |
 | `simulated` (`SIMULATED_FAILURE_MODE=none`) | 0 / 30 | 30 seeded complaints | 2026-09-26 |
-| `llm` (Groq) | **pending** | 30 seeded complaints | — |
+| `llm` (Groq, `qwen/qwen3.8-27b`) | **0 / 30** | 30 seeded complaints, paced 6 s apart | 2026-09-26 |
 | `ollama` | **pending** | 30 seeded complaints | — |
 
 The two measured rows are baselines, not findings: `rules` cannot fall back, and `simulated`
@@ -129,34 +143,47 @@ TRIAGE_PROVIDER=llm GROQ_API_KEY=... uv run python ../scripts/measure_triage.py 
 
 ## 7. Groq versus Ollama
 
-**Pending — needs a Groq key and the Ollama weights** (`make pull-models`, `AD-046`). Run both
-over the same 30 seeded complaints and compare:
+**Groq side, measured 2026-09-26** over the 30 seeded complaints, paced 6 s apart
+(`docs/evidence/triage-groq-*.json`), with two local baselines for reference:
+
+| Provider / model | p50 latency | p95 latency | Fallbacks | Category agrees with seed labels | Priority agrees with seed labels |
+|---|---|---|---|---|---|
+| Groq `qwen/qwen3.8-27b` (**chosen**) | 497 ms | 959 ms | 0 / 30 | 28 / 30 (93 %) | 22 / 30 (73 %) |
+| Groq `openai/gpt-oss-20b` (rejected) | 766 ms | 1,184 ms | 1 / 30 | 29 / 30 (97 %) | 16 / 30 (53 %) |
+| `rules` | 1 ms | 1 ms | 0 / 30 | 27 / 30 (90 %) | 20 / 30 (67 %) |
+| `simulated` | 1 ms | 1 ms | 0 / 30 | 3 / 30 (10 %) | 7 / 30 (23 %) |
+
+The two hosted models agree with each other on 29 / 30 categories and 20 / 30 priorities
+(`measure_triage.py compare`). Category is close to solved by every real classifier; **priority is
+where they differ**, and it is the field that decides dispatch urgency. Qwen's eight priority
+misses: four `low` labels rated `normal`, two `normal` rated `high`, and two `high` rated `normal`
+("no water supply for four days" and "service-road lights off, women scared to walk after isha").
+Half are a stricter threshold for "minor"; the two under-ratings are the ones that matter, and both
+are risks the prompt's examples ("burst mains, sewage overflow, live wires…") do not name — a
+concrete candidate for the next `PROMPT_VERSION`.
+
+Two caveats that keep these numbers honest. The seed labels were written by the same people who
+wrote the rules' keyword lists, which flatters `rules`. And 30 complaints is a small sample: one
+complaint is 3.3 percentage points, so the 20-point priority gap between the two hosted models is
+meaningful, the 3-point category gap is not.
+
+**Ollama side: pending** — it needs the Compose `ollama` service and the model in the
+`ollama_models` volume (`make pull-models`, `AD-046`), both platform work. Then:
 
 ```sh
-TRIAGE_PROVIDER=llm    GROQ_API_KEY=... uv run python ../scripts/measure_triage.py provider --out ../docs/evidence/triage-groq.json
 TRIAGE_PROVIDER=ollama OLLAMA_BASE_URL=... uv run python ../scripts/measure_triage.py provider --out ../docs/evidence/triage-ollama.json
-uv run python ../scripts/measure_triage.py compare ../docs/evidence/triage-groq.json ../docs/evidence/triage-ollama.json
+uv run python ../scripts/measure_triage.py compare ../docs/evidence/triage-groq-qwen-qwen3-8-27b.json ../docs/evidence/triage-ollama.json
 ```
 
-The report to write here: median and p95 latency per provider, fallback rate and its error
-classes, category and priority agreement between the two, and agreement of each with the
-seed's hand labels. Ollama on CPU may exceed the 10 s timeout, so report its timeouts
-separately rather than folding them into "worse classification".
+Report here the Ollama row of the table above and its agreement with the Groq run. Ollama on CPU may
+exceed the 10 s timeout, so report its timeouts separately rather than folding them into "worse
+classification".
 
-**Reference points already measured (2026-09-26)**, for reading the comparison when it exists:
-
-| Provider | p50 latency | p95 latency | Category agrees with seed labels | Priority agrees with seed labels |
-|---|---|---|---|---|
-| `rules` | 1 ms | 1 ms | 27 / 30 (90 %) | 20 / 30 (67 %) |
-| `simulated` | 1 ms | 1 ms | 3 / 30 (10 %) | 7 / 30 (23 %) |
-
-`simulated` is at chance level by design, which is what a seeded fake should be. The rules result
-flatters itself: the seed labels and the keyword lists were written by the same people, from the
-same vocabulary. Its misses are informative all the same — "water tankers blocking the lane"
-(labelled `other`) and "lights on the service road" (labelled `streetlights`) both fall to
-first-match keyword order, and most priority misses are risk the keyword sets do not name
-("sparks", "dogs … bitten", "dirty water … children sick"). That gap is exactly what the model is
-there to close, and the Groq-versus-labels agreement is the number that shows whether it does.
+**Why `rules` still lands so close.** The rules result flatters itself for the reason above, but its
+misses are informative: "water tankers blocking the lane" (labelled `other`) and "lights on the
+service road" (labelled `streetlights`) both fall to first-match keyword order, and most priority
+misses are risk the keyword sets do not name ("sparks", "dogs … bitten", "dirty water … children
+sick"). Those are exactly the complaints where the hosted model earns its cost.
 
 ## 8. The injection guardrail, and what its tests prove
 

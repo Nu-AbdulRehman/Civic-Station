@@ -23,7 +23,7 @@ class Settings(DatabaseSettings):
     triage_provider: ConfiguredProvider = ConfiguredProvider.RULES
     groq_api_key: SecretStr | None = None
     groq_base_url: str = "https://api.groq.com/openai/v1"
-    triage_model: str = "llama-3.1-8b-instant"
+    triage_model: str = "qwen/qwen3.8-27b"
     ollama_base_url: str = "http://ollama:11434"
     ollama_model: str = "llama3.2:1b"
     # Refused above 15 s: two calls plus jitter must stay under 31 s (BR-TRIAGE-008).

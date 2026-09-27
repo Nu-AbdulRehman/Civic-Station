@@ -128,6 +128,19 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   limits, Groq fallback rate and Groq-vs-Ollama left pending with commands. Files: `scripts/*`,
   `backend/tests/unit/test_check_submission.py`, `docs/TRIAGE.md`, `docs/evidence/triage-*.json`,
   `README.md`.
+- 2026-09-26 · fix/openapi-error-responses · OpenAPI schema now documents the errors the API sends
+  (FR-BE-002, FR-FE-012): `ErrorResponse`/`FieldError`/`ReadinessFailure` models, per-route 400/404/
+  409/413/415/429 responses with `Retry-After`, `Location` and `X-Cache` headers, FastAPI's default
+  422 stripped; frontend types regenerated and the client's hand-written error shape replaced by the
+  generated one. No wire behaviour changed. Files: `backend/app/{main,errors}.py`,
+  `backend/app/domain/models.py`, `backend/app/routes/*`, `backend/tests/unit/*`, `frontend/src/api/*`.
+- 2026-09-26 · fix/openapi-error-responses · Live Groq smoke run (T-M5-008) with the developer's key
+  from the git-ignored `.env`: pinned `llama-3.1-8b-instant` returned 404; both live candidates
+  measured (paced under the observed 8k TPM quota); developers chose `qwen/qwen3.8-27b`; `AD-045`/
+  `AD-006` revised; model default, conventions, ADR-0001, M5/M10 guides, FR-AI-013, AGENTS.md and
+  `docs/TRIAGE.md` §1/§4/§6/§7 updated; `--interval` pacing added to `measure_triage.py`. Key
+  verified absent from logs and working tree. Files: `backend/app/config.py`, `docs/**`, `AGENTS.md`,
+  `scripts/measure_triage.py`, `backend/tests/unit/test_llm_triage.py`.
 
 ## Skill invocations
 

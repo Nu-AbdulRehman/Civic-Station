@@ -96,7 +96,7 @@ Seven required sections (`AD-052`), each of which something else depends on:
 
 | Section | Depended on by |
 |---|---|
-| **Pinned model names** — `llama-3.1-8b-instant`, `llama3.2:1b` | `AD-045`; the env registry defaults must match |
+| **Pinned model names** — `qwen/qwen3.8-27b`, `llama3.2:1b` | `AD-045`; the env registry defaults must match |
 | **The prompt, verbatim**, with `PROMPT_VERSION` | `FR-AI-010`; it exists nowhere else in the document set |
 | **The output JSON schema**, verbatim | `FR-AI-005`; the validator is written against it |
 | **Observed provider rate limits, with the date seen** | `AD-006`; `AD-017`'s limit of 10/minute is only defensible against a real quota |

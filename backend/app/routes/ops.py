@@ -5,7 +5,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends
 
 from app.deps import get_readiness_service
-from app.domain.models import HealthStatus, ReadyStatus
+from app.domain.models import HealthStatus, ReadinessFailure, ReadyStatus
 from app.errors import error_response
 from app.services.readiness import ReadinessService
 
@@ -20,7 +20,10 @@ async def health() -> HealthStatus:
 
 
 @router.get(
-    "/ready", responses={503: {"description": "A dependency is unreachable; names which one"}}
+    "/ready",
+    responses={
+        503: {"model": ReadinessFailure, "description": "A dependency is unreachable; names it"}
+    },
 )
 async def ready(
     service: Annotated[ReadinessService, Depends(get_readiness_service)],

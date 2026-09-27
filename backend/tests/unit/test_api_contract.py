@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.domain.enums import Status
+from app.domain.models import ReadinessFailure
 from app.main import create_app
 from app.providers.triage.simulated import SimulatedTriage
 from tests.conftest import Fakes, install_fakes
@@ -192,6 +193,7 @@ def test_14_ready_names_the_failed_dependency(app: FastAPI) -> None:
     assert body["error"] == {"code": "dependency_unavailable", "message": "cache unreachable"}
     assert body["checks"] == {"database": "ok", "cache": "fail"}
     assert body["request_id"] == r.headers["x-request-id"]
+    ReadinessFailure.model_validate(body)
 
 
 def test_ready_ok(client: TestClient) -> None:

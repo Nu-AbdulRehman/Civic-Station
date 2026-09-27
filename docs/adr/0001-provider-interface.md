@@ -28,7 +28,7 @@ Four implementations:
 
 | Implementation | `TRIAGE_PROVIDER` | Purpose |
 |---|---|---|
-| `LLMTriage` | `llm` | Production path. Groq `llama-3.1-8b-instant`, via the OpenAI-compatible endpoint using the official `openai` SDK with `base_url` changed. Reports `triaged_by = "llm:groq"`. |
+| `LLMTriage` | `llm` | Production path. Groq `qwen/qwen3.8-27b`, via the OpenAI-compatible endpoint using the official `openai` SDK with `base_url` changed. Reports `triaged_by = "llm:groq"`. |
 | `OllamaTriage` | `ollama` | Fully offline path. `llama3.2:1b` in a container in the Compose stack. Reports `"llm:ollama"`. |
 | `RuleBasedTriage` | `rules` | Deterministic keyword classifier. No network. Never raises. Reports `"rules"`, or `"rules:fallback"` when reached through the fallback path. |
 | `SimulatedTriage` | `simulated` | Seeded deterministic fake for CI, with configurable failure injection. Reports `"simulated"`. |

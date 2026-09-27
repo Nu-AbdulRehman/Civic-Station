@@ -101,3 +101,28 @@ class HealthStatus(BaseModel):
 class ReadyStatus(BaseModel):
     status: Literal["ready"] = "ready"
     checks: dict[Literal["database", "cache"], Literal["ok", "fail"]]
+
+
+class FieldError(BaseModel):
+    field: str
+    rule: str
+    detail: str
+
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+    fields: list[FieldError] | None = None  # validation errors only
+
+
+class ErrorResponse(BaseModel):
+    """The single error body for the whole API (00-conventions §4)."""
+
+    error: ErrorDetail
+    request_id: str | None
+
+
+class ReadinessFailure(ErrorResponse):
+    """The 503 body of /ready: the error envelope plus which dependency failed."""
+
+    checks: dict[Literal["database", "cache"], Literal["ok", "fail"]]
