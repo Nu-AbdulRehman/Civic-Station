@@ -141,6 +141,10 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   `docs/TRIAGE.md` §1/§4/§6/§7 updated; `--interval` pacing added to `measure_triage.py`. Key
   verified absent from logs and working tree. Files: `backend/app/config.py`, `docs/**`, `AGENTS.md`,
   `scripts/measure_triage.py`, `backend/tests/unit/test_llm_triage.py`.
+- 2026-09-26 · docs/handoff-dev2 · Wrote `docs/handover/handoff.md` for Dev 2 and their agent: the
+  stacked-branch chain and its merge rules (in order, merge commits only, CI first), the CI command
+  set, image/Compose/k8s facts about the application, Dev 1 checks that need Dev 2's services,
+  decisions to review, and gotchas. Files: `docs/handover/handoff.md`.
 
 ## Skill invocations
 
