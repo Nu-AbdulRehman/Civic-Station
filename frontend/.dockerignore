@@ -1,0 +1,16 @@
+# T-M6-002, FR-CTR-003. node_modules alone is most of the context; the build stage runs npm ci.
+.git
+.env
+.env.*
+node_modules
+dist
+coverage
+docs
+tests/fixtures/
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+Dockerfile
+.dockerignore

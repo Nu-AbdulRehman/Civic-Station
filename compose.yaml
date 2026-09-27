@@ -1,0 +1,163 @@
+# Development stack (T-M6-004, FR-CTR-005/007/008/009/010, AD-002, ADR-0005).
+# Quickstart: cp .env.example .env && docker compose up -d --build --wait
+# Then open http://civic-station.localhost:8080 (or http://127.0.0.1:8080).
+name: civic-station
+
+x-backend: &backend
+  build: ./backend
+  image: civic-station-backend:dev
+  environment: &backend-env
+    DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@database:5432/${POSTGRES_DB:?set in .env}
+    REDIS_URL: redis://cache:6379/0
+    TRIAGE_PROVIDER: ${TRIAGE_PROVIDER:-rules}
+    GROQ_API_KEY: ${GROQ_API_KEY:-}
+    TRIAGE_MODEL: ${TRIAGE_MODEL:-qwen/qwen3.8-27b}
+    OLLAMA_BASE_URL: http://ollama:11434
+    OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+    TRIAGE_TIMEOUT_SECONDS: ${TRIAGE_TIMEOUT_SECONDS:-10}
+    SIMULATED_FAILURE_MODE: ${SIMULATED_FAILURE_MODE:-none}
+    RATE_LIMIT_REQUESTS: ${RATE_LIMIT_REQUESTS:-10}
+    RATE_LIMIT_WINDOW_SECONDS: ${RATE_LIMIT_WINDOW_SECONDS:-60}
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    APP_VERSION: ${APP_VERSION:-dev}
+
+services:
+  frontend:
+    build: ./frontend
+    image: civic-station-frontend:dev
+    environment:
+      BACKEND_ORIGIN: http://backend:8000
+    ports: ["8080:8080"]
+    networks: [edge] # edge only: no route to database or cache (BR-SEC-001)
+    depends_on:
+      backend: { condition: service_healthy }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "0.1", memory: 128M }
+        reservations: { cpus: "0.02", memory: 32M }
+
+  backend:
+    <<: *backend
+    # --reload plus the bind mount below is the dev loop; compose.prod.yaml has neither (FR-CTR-008).
+    command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000",
+              "--timeout-graceful-shutdown", "25", "--no-proxy-headers", "--reload"]
+    volumes:
+      - ./backend/app:/app/app:ro
+    ports: ["8000:8000"] # dev only: the Vite dev server proxies here
+    networks: [edge, internal, egress] # the only service on more than one network (AD-002)
+    depends_on:
+      database: { condition: service_healthy }
+      cache: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+        reservations: { cpus: "0.1", memory: 256M }
+
+  # One-shot schema + seed, never from app startup (BR-DATA-001, T-M6-006). Seed is idempotent.
+  migrate:
+    <<: *backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+    command: ["sh", "-c", "alembic upgrade head && python -m seeds.complaints"]
+    healthcheck: { disable: true }
+    networks: [internal]
+    depends_on:
+      database: { condition: service_healthy }
+    restart: "no"
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
+
+  database:
+    image: postgres:16.15-alpine3.24
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1G }
+        reservations: { cpus: "0.2", memory: 512M }
+
+  cache:
+    image: redis:7.4.11-alpine3.21
+    # AOF on the named volume; one bounded memory budget for five keyspaces (FR-CACHE-005, 05-M4 §2.6).
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes: [redisdata:/data]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "0.2", memory: 256M }
+        reservations: { cpus: "0.05", memory: 64M }
+
+  # Offline triage: `make pull-models` once, then
+  # TRIAGE_PROVIDER=ollama docker compose --profile ollama up -d --wait   (AD-046, T-M6-010)
+  ollama:
+    image: ollama/ollama:0.34.4
+    profiles: [ollama]
+    volumes: [ollama_models:/root/.ollama]
+    networks: [internal] # no egress: weights must already be in the volume
+    healthcheck:
+      # Fails with a named reason instead of hanging on a pull it cannot perform.
+      test: ["CMD-SHELL", "ollama show \"$${OLLAMA_MODEL}\" >/dev/null 2>&1 || { echo \"ollama_models volume has no $${OLLAMA_MODEL}; run make pull-models\"; exit 1; }"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "2.0", memory: 3G }
+        reservations: { cpus: "0.5", memory: 1G }
+
+  # Throwaway puller on egress, used only by `make pull-models`. No-op when the model is present.
+  ollama-pull:
+    image: ollama/ollama:0.34.4
+    profiles: [pull]
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        ollama serve >/dev/null 2>&1 &
+        i=0; until ollama list >/dev/null 2>&1; do
+          i=$$((i + 1)); [ "$$i" -le 30 ] || { echo "ollama serve did not start in 30 s"; exit 1; }
+          sleep 1
+        done
+        ollama show "$$OLLAMA_MODEL" >/dev/null 2>&1 && echo "$$OLLAMA_MODEL already present" && exit 0
+        ollama pull "$$OLLAMA_MODEL"
+    environment:
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+    volumes: [ollama_models:/root/.ollama]
+    networks: [egress]
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1G }
+
+networks:
+  edge: {}
+  internal:
+    internal: true # no route to the outside world
+  egress: {}
+
+volumes:
+  pgdata: {}
+  redisdata: {}
+  ollama_models: {}

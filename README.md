@@ -1,5 +1,35 @@
 # Civic-Station
 
+## Quickstart
+
+Needs only Docker (Compose v2) and `make`. From a clean clone:
+
+```sh
+make up
+```
+
+That copies `.env.example` to `.env` if there is none, builds both images, runs the migration
+and the seed as a one-shot `migrate` service, and waits until every service is healthy. Open
+<http://civic-station.localhost:8080>. The default provider is `rules`, so no API key is needed.
+Without `make`, run the same two steps by hand:
+
+```sh
+cp .env.example .env
+docker compose up -d --build --wait
+```
+
+To use Groq, set `TRIAGE_PROVIDER=llm` and `GROQ_API_KEY` in `.env` (never in a committed file).
+For offline triage with Ollama, pull the weights once, then start the profile:
+
+```sh
+make pull-models       # one-time, over the egress network (AD-046)
+TRIAGE_PROVIDER=ollama docker compose --profile ollama up -d --wait
+```
+
+`docker compose down` stops the stack; add `-v` to drop the data volumes. Production uses
+`compose.prod.yaml`, which runs SHA-tagged images only: `IMAGE_TAG=<sha> docker compose -f
+compose.prod.yaml up -d --wait`.
+
 ## Database migrations and seed
 
 The schema is created only by Alembic, never at application startup (`BR-DATA-001`). Both

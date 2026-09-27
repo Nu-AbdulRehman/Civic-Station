@@ -2,3 +2,4 @@
 # including Windows with core.autocrlf=true; a CRLF shebang line breaks `sh`.
 *.sh        text eol=lf
 *.template  text eol=lf
+Makefile    text eol=lf
