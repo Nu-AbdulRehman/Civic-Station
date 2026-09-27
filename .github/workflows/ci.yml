@@ -82,7 +82,6 @@ jobs:
       # traffic (CLAUDE.md rule 16). The name must end in _test (tests/integration/conftest.py).
       DATABASE_URL: postgresql+asyncpg://postgres@localhost:5432/civic_test
       REDIS_URL: redis://localhost:6379/0
-      TRIAGE_PROVIDER: simulated
     steps:
       - uses: actions/checkout@v4
       - id: has
@@ -97,13 +96,16 @@ jobs:
       - if: steps.has.outputs.unit == 'yes'
         working-directory: backend
         run: uv sync --frozen
-      # Coverage gate (65 % on app/) lives in pyproject.toml, so --cov fails the step below it.
-      - if: steps.has.outputs.unit == 'yes' && steps.has.outputs.integration != 'yes'
+      # Unit tests assume the default provider (rules); TRIAGE_PROVIDER must not leak into them.
+      # Coverage gate (65 % on app/) lives in pyproject.toml.
+      - if: steps.has.outputs.unit == 'yes'
         working-directory: backend
         run: uv run pytest tests/unit --cov
       - if: steps.has.outputs.integration == 'yes'
         working-directory: backend
-        run: uv run pytest tests/unit tests/integration --cov
+        env:
+          TRIAGE_PROVIDER: simulated
+        run: uv run pytest tests/integration --cov --cov-append
 
   test-frontend:
     runs-on: ubuntu-24.04
