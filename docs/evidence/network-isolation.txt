@@ -1,0 +1,18 @@
+# Network isolation proof (T-M6-005, BR-SEC-001, RUB-G-03)
+# Captured 2026-09-27 against compose.yaml on branch feat/T-M6-001-containers-compose.
+$ docker compose exec frontend ping -c1 -W2 database
+ping: bad address 'database'
+exit code: 1
+
+$ docker compose exec frontend ping -c1 -W2 cache
+ping: bad address 'cache'
+exit code: 1
+
+$ docker compose exec backend python -c "socket.create_connection((database, 5432))"   # backend DOES reach it
+database:5432 reachable
+exit code: 0
+
+$ docker network inspect (members per network)
+edge internal=false: civic-station-backend-1 civic-station-frontend-1 
+internal internal=true: civic-station-backend-1 civic-station-database-1 civic-station-cache-1 
+egress internal=false: civic-station-backend-1 

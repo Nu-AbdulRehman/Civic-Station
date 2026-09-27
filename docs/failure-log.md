@@ -43,3 +43,13 @@ reconstructed from memory; from here on, entries are appended as the failure hap
 - **Symptom:** with a valid key, `POST /api/complaints` returned 201 but `triaged_by: rules:fallback`, `error_class: Other`.
 - **Wrongly believed:** the key was wrong (401), which would also classify as `Other`.
 - **Truth:** a direct `LLMTriage` call surfaced `404 model_not_found` for the pinned `llama-3.1-8b-instant`; `GET /models` showed Groq no longer serves a Llama chat model. The resilience path did its job — the citizen got a 201 — but it also hid the cause behind `Other`. The model was replaced with `qwen/qwen3.8-27b` after measuring both live candidates (`AD-045` revised). Lesson: a pinned hosted model is a dependency that can disappear; the smoke run is what catches it.
+
+### 2026-09-27 · P3 · Frontend image looked 26 MB locally but would fail the 60 MB CI gate
+- **Symptom:** `docker image inspect -f '{{.Size}}'` printed 26 MB for the frontend image on the laptop, comfortably under the gate.
+- **Wrongly believed:** that number is the unpacked size the CI gate measures.
+- **Truth:** Docker Desktop here uses the containerd image store, where `.Size` is the *compressed* content size. `docker history` showed ~67 MB unpacked, driven by the full `nginx:alpine` variant's module layer; the CI runner's classic store reports that unpacked number. Switched to the `-slim` variant (~15 MB unpacked, `AD-063`). Measure with `docker history` layer sums, not `inspect`, on a containerd-store machine.
+
+### 2026-09-27 · P3 · Pinned nginx 1.27 base failed the Trivy gate
+- **Symptom:** Trivy with `--ignore-unfixed` found 40 HIGH/CRITICAL (openssl, c-ares, expat) in `nginx:1.27.5-alpine`.
+- **Wrongly believed:** pinning the version the design doc names is enough for a clean scan.
+- **Truth:** the 1.27 line sits on Alpine 3.21, which no longer receives rebuilds, so fixed CVEs accumulate. Pinning freezes vulnerabilities as well as behaviour; the pin has to be to a maintained line (`AD-063`).

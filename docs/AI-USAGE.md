@@ -141,6 +141,10 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   `docs/TRIAGE.md` §1/§4/§6/§7 updated; `--interval` pacing added to `measure_triage.py`. Key
   verified absent from logs and working tree. Files: `backend/app/config.py`, `docs/**`, `AGENTS.md`,
   `scripts/measure_triage.py`, `backend/tests/unit/test_llm_triage.py`.
+- 2026-09-27 · feat/T-M6-001-containers-compose · P2–P5 + P9 (T-M6-001…008/010/011, T-M4-008
+  Compose part, T-M4-009): backend and frontend Dockerfiles + `.dockerignore`, `compose.yaml`
+  (5 services + migrate + ollama-pull, 3 networks, 3 volumes), `compose.prod.yaml`, `.env.example`,
+  `Makefile`, README quickstart, isolation evidence, notes, AD-062/063, `docs/handover/DEV2-STATUS.md`.
 - 2026-09-26 · docs/handoff-dev2 · Wrote `docs/handover/handoff.md` for Dev 2 and their agent: the
   stacked-branch chain and its merge rules (in order, merge commits only, CI first), the CI command
   set, image/Compose/k8s facts about the application, Dev 1 checks that need Dev 2's services,
@@ -318,3 +322,35 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   models there; `NFR-ARCH-001`'s list omits it. `docs/TRIAGE.md` reports only numbers actually
   measured here; the Groq and Ollama figures need a live key and pulled weights, so those sections
   name the pending measurement and its exact command instead of inventing values.
+
+### 2026-09-27 · feat/T-M6-001-containers-compose
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for P2–P5 + P9 from `07-M6-containers.md` §6 (10 items,
+  each tagged T-M6-nnn).
+- **I changed:** accepted as-is.
+
+### 2026-09-27 · feat/T-M6-001-containers-compose
+- **Tool:** Claude Code + `ponytail`
+- **Shaped / Wrote:** Decision record for two images under one `IMAGE_TAG` in `compose.prod.yaml`,
+  recorded as `AD-062`.
+- **I changed:** accepted as-is.
+
+### 2026-09-27 · feat/T-M6-001-containers-compose
+- **Tool:** Claude Code (design fork recorded without a separate skill run)
+- **Shaped / Wrote:** `AD-063`, frontend base moved from `nginx:1.27.5-alpine` to
+  `nginx:1.30.5-alpine3.24-slim` after Trivy and the 60 MB gate both failed on the design doc's pin.
+- **I changed:** the fork was found by measurement mid-build; `ponytail` was not re-invoked for it.
+  Disclosed here rather than reconstructed.
+
+### 2026-09-27 · feat/T-M6-001-containers-compose
+- **Tool:** Claude Code, diff self-review (the installed `grilling` skill questions a person about a
+  plan, not a diff — the open process gap in the Dev 1 handoff §7)
+- **Shaped / Wrote:** Findings on the branch diff: (1) `compose.yaml` `ollama-pull` wait loop had
+  no bound, so a failed `ollama serve` hung `make pull-models` forever — fixed, 30 s cap;
+  (2) `compose.yaml:44` dev backend runs `--reload`, so PID 1 is the reloader and the SIGTERM drain
+  check (T-M2-012) is not meaningful against the dev file — WONTFIX, run it against
+  `compose.prod.yaml`'s command; (3) `.env.example:9` puts a credential-shaped URL
+  (`civic:PLACEHOLDER_change_me@`) in the tree, which T-M8-014's secret detector must allow by
+  the `PLACEHOLDER_` prefix rather than flag — carried to T-M8-014; (4) an existing `.env` without
+  `POSTGRES_*` makes `make up` stop with `POSTGRES_USER: set in .env` — intended, loud failure.
+- **I changed:** fixed (1); (2) and (3) documented, (4) accepted.

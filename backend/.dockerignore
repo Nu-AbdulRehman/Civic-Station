@@ -1,0 +1,21 @@
+# T-M6-002, FR-CTR-003. The image needs app/, seeds/, alembic/ and the manifests; nothing else.
+.git
+.env
+.env.*
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+coverage.xml
+htmlcov
+tests
+tests/fixtures/
+docs
+dist
+coverage
+node_modules
+Dockerfile
+.dockerignore
