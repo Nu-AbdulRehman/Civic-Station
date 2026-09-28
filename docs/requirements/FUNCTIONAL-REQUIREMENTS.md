@@ -522,7 +522,7 @@ Histogram buckets for both duration histograms: `0.05, 0.1, 0.25, 0.5, 1, 2.5, 5
 **Verify:** Test.
 
 ### FR-AI-013 — Triage design document
-**MUST.** `docs/TRIAGE.md` contains all seven sections of `AD-052`, each of which something else depends on: the **pinned model names** (`llama-3.1-8b-instant`, `llama3.2:1b`); the **prompt, verbatim**; the **output JSON schema**; the **observed provider rate limits with the date they were seen**; the **measured triage cache hit rate** naming the counters it was computed from; the **measured fallback rate**; and the **Groq-versus-Ollama comparison** over the same seeded inputs, reporting latency and agreement rate.
+**MUST.** `docs/TRIAGE.md` contains all seven sections of `AD-052`, each of which something else depends on: the **pinned model names** (`qwen/qwen3.8-27b`, `llama3.2:1b`); the **prompt, verbatim**; the **output JSON schema**; the **observed provider rate limits with the date they were seen**; the **measured triage cache hit rate** naming the counters it was computed from; the **measured fallback rate**; and the **Groq-versus-Ollama comparison** over the same seeded inputs, reporting latency and agreement rate.
 **Acceptance:** All seven sections are present and none is a placeholder. The rate-limit line carries a date. The hit rate and fallback rate are numbers with the counter names beside them, not prose.
 **Verify:** Document review, CI (`scripts/check_submission.py` fails if any of the seven headings is missing or is followed by fewer than 20 characters).
 

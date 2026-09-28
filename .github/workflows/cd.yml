@@ -1,0 +1,146 @@
+name: CD
+
+# test --needs--> build-push --needs--> deploy-k8s (FR-CICD-009, BR-DEL-001). Nothing publishes
+# or deploys from code that has not passed the same eight jobs as ci.yml.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_smoke_failure:
+        description: "Fail the smoke test on purpose to exercise the automatic rollback (AD-065)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false # never abandon a deploy half-way
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build-push:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write # GITHUB_TOKEN: scoped and revocable, never an account password
+    outputs:
+      backend_digest: ${{ steps.push.outputs.backend_digest }}
+      frontend_digest: ${{ steps.push.outputs.frontend_digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: reg
+        # GHCR rejects upper case, and the owner name has some (AD-062).
+        run: echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      # The SHA tag is what deploys; latest is published for people and never deployed (ADR-0003).
+      - id: push
+        run: sh scripts/publish-images.sh "${{ steps.reg.outputs.registry }}" "${{ github.sha }}" latest
+      - uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.reg.outputs.registry }}/civic-station-backend:${{ github.sha }}
+          format: spdx-json
+          output-file: sbom-backend.spdx.json
+          upload-artifact: false
+      - uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.reg.outputs.registry }}/civic-station-frontend:${{ github.sha }}
+          format: spdx-json
+          output-file: sbom-frontend.spdx.json
+          upload-artifact: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom-backend-${{ github.sha }}
+          path: sbom-backend.spdx.json
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom-frontend-${{ github.sha }}
+          path: sbom-frontend.spdx.json
+          retention-days: 90
+
+  deploy-k8s:
+    needs: build-push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    env:
+      CLUSTER: civic-station
+      EXPECT_PROVIDER: llm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # HEAD~1 is the baseline for a manual run
+      - id: reg
+        run: echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Install k3d
+        run: |
+          sudo curl -fsSL -o /usr/local/bin/k3d https://github.com/k3d-io/k3d/releases/download/v5.9.0/k3d-linux-amd64
+          sudo chmod +x /usr/local/bin/k3d
+      - name: Create cluster and Secret
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }} # repository secret; only ever lands in the cluster Secret
+        run: |
+          test -n "$GROQ_API_KEY" || { echo "GROQ_API_KEY repository secret is not set"; exit 1; }
+          sh scripts/k3d-cluster.sh
+      # Baseline = the previous main commit, so a failed smoke test has something to roll back to,
+      # and the new migration runs while old-code pods still serve (AD-065, 08-M7 §2.1).
+      - name: Deploy baseline (previous main commit)
+        id: baseline
+        env:
+          REGISTRY: ${{ steps.reg.outputs.registry }}
+          # A push knows its predecessor; a manual run (workflow_dispatch) uses the parent commit.
+          BEFORE: ${{ github.event.before }}
+        run: |
+          BASELINE=${BEFORE:-$(git rev-parse HEAD~1 2>/dev/null || true)}
+          echo "sha=$BASELINE" >> "$GITHUB_OUTPUT"
+          if [ -n "$BASELINE" ] && [ "$BASELINE" != 0000000000000000000000000000000000000000 ] \
+              && docker manifest inspect "$REGISTRY/civic-station-backend:$BASELINE" >/dev/null 2>&1; then
+            sh scripts/deploy-k8s.sh deploy "$BASELINE"
+            sh scripts/deploy-k8s.sh smoke "$BASELINE" || echo "::warning::baseline $BASELINE failed its own smoke test"
+            echo "deployed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::no baseline image for '$BASELINE'; a failed deploy has nothing to roll back to"
+            echo "deployed=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Deploy ${{ github.sha }}
+        id: deploy
+        env:
+          REGISTRY: ${{ steps.reg.outputs.registry }}
+        run: sh scripts/deploy-k8s.sh deploy "${{ github.sha }}"
+      - name: Smoke test through the Ingress
+        id: smoke
+        env:
+          REGISTRY: ${{ steps.reg.outputs.registry }}
+          FORCE_SMOKE_FAILURE: ${{ inputs.force_smoke_failure || false }}
+        run: sh scripts/deploy-k8s.sh smoke "${{ github.sha }}"
+      - run: kubectl get hpa,pods,svc,ingress -n civic-station
+      # Fails closed (FR-CICD-009): roll back, show why, and stay red.
+      - name: Roll back and report
+        if: failure() && (steps.deploy.conclusion == 'failure' || steps.smoke.conclusion == 'failure')
+        env:
+          REGISTRY: ${{ steps.reg.outputs.registry }}
+          DEPLOYED_BASELINE: ${{ steps.baseline.outputs.deployed }}
+          BASELINE: ${{ steps.baseline.outputs.sha }}
+        run: |
+          kubectl describe deployment/backend -n civic-station || true
+          kubectl logs deployment/backend -n civic-station --all-containers --tail=100 || true
+          if [ "$DEPLOYED_BASELINE" = true ]; then
+            kubectl rollout undo deployment/backend -n civic-station
+            kubectl rollout undo deployment/frontend -n civic-station
+            kubectl rollout status deployment/backend -n civic-station --timeout=300s
+            kubectl rollout status deployment/frontend -n civic-station --timeout=180s
+            EXPECT_PROVIDER= sh scripts/deploy-k8s.sh smoke "$BASELINE" && echo "rolled back to $BASELINE"
+          else
+            echo "no baseline revision in this ephemeral cluster; nothing to roll back to"
+          fi
+          exit 1

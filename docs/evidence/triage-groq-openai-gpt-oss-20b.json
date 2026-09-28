@@ -1,0 +1,346 @@
+{
+  "summary": {
+    "n": 30,
+    "provider": "llm:groq",
+    "latency_ms_p50": 766.0,
+    "latency_ms_p95": 1184.0,
+    "fallback_rate": 0.03333333333333333,
+    "fallback_error_classes": [
+      "Other"
+    ],
+    "agreement_with_labels_category": 0.9666666666666667,
+    "agreement_with_labels_priority": 0.5333333333333333
+  },
+  "rows": [
+    {
+      "text": "Burst water main flooding Street 12 since fajr, water entering ground floors. Please send KWSC team urgently.",
+      "label_category": "water",
+      "label_priority": "high",
+      "category": "water",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1246
+    },
+    {
+      "text": "No water supply in our lane for four days, tanker mafia charging 5000 rupees. Old people suffering.",
+      "label_category": "water",
+      "label_priority": "high",
+      "category": "water",
+      "priority": "normal",
+      "triaged_by": "rules:fallback",
+      "fallback": true,
+      "error_class": "Other",
+      "latency_ms": 940
+    },
+    {
+      "text": "Water coming very dirty and smelly from nalka since last week, bachay beemar ho rahay hain.",
+      "label_category": "water",
+      "label_priority": "high",
+      "category": "water",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 753
+    },
+    {
+      "text": "Small leakage from pipe near house number 45, water wasting whole day.",
+      "label_category": "water",
+      "label_priority": "low",
+      "category": "water",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 751
+    },
+    {
+      "text": "Water pressure very low in morning timing, motor not pulling water to tanki upstairs.",
+      "label_category": "water",
+      "label_priority": "normal",
+      "category": "water",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 612
+    },
+    {
+      "text": "Live wire hanging from pole near masjid after last night storm, very dangerous for namazi.",
+      "label_category": "electricity",
+      "label_priority": "high",
+      "category": "electricity",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 687
+    },
+    {
+      "text": "Load shedding 10 hours daily in our area even though everyone paying bills. K-Electric not listening.",
+      "label_category": "electricity",
+      "label_priority": "normal",
+      "category": "electricity",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 755
+    },
+    {
+      "text": "Transformer making loud noise and sparks since Tuesday, whole street scared it will blast.",
+      "label_category": "electricity",
+      "label_priority": "high",
+      "category": "electricity",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 854
+    },
+    {
+      "text": "Electric meter reading wrong, bill came three times more than last month.",
+      "label_category": "electricity",
+      "label_priority": "low",
+      "category": "electricity",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 860
+    },
+    {
+      "text": "Voltage fluctuation daily at maghrib time, fridge and UPS got damaged. Call me on 0300-1234567 for details.",
+      "label_category": "electricity",
+      "label_priority": "normal",
+      "category": "electricity",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 815
+    },
+    {
+      "text": "Gutter overflow on main road for one week, sewage water standing in front of school.",
+      "label_category": "sanitation",
+      "label_priority": "high",
+      "category": "sanitation",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 698
+    },
+    {
+      "text": "Manhole cover missing near Chowrangi, children playing there, very dangerous.",
+      "label_category": "sanitation",
+      "label_priority": "high",
+      "category": "sanitation",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 646
+    },
+    {
+      "text": "Kachra not picked up for ten days, garbage heap near park, mosquitoes and bad smell everywhere.",
+      "label_category": "sanitation",
+      "label_priority": "normal",
+      "category": "sanitation",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1071
+    },
+    {
+      "text": "Sweeper not coming in our gali since Eid, litter everywhere.",
+      "label_category": "sanitation",
+      "label_priority": "low",
+      "category": "sanitation",
+      "priority": "low",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1065
+    },
+    {
+      "text": "Nala behind our houses is choked with plastic, when rain comes water will enter homes.",
+      "label_category": "sanitation",
+      "label_priority": "normal",
+      "category": "sanitation",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 873
+    },
+    {
+      "text": "Big pothole on main Rashid Minhas Road, two motorcycle accidents this week already.",
+      "label_category": "roads",
+      "label_priority": "high",
+      "category": "roads",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 843
+    },
+    {
+      "text": "Road dug for gas line three months ago and never repaired, rickshaws getting stuck.",
+      "label_category": "roads",
+      "label_priority": "normal",
+      "category": "roads",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1037
+    },
+    {
+      "text": "Speed breaker paint gone, cars jumping on it at night without seeing.",
+      "label_category": "roads",
+      "label_priority": "low",
+      "category": "roads",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1184
+    },
+    {
+      "text": "Footpath broken and tiles missing outside the hospital gate, patients falling.",
+      "label_category": "roads",
+      "label_priority": "normal",
+      "category": "roads",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1164
+    },
+    {
+      "text": "Single pothole near bus stop filling with water whenever it rains.",
+      "label_category": "roads",
+      "label_priority": "low",
+      "category": "roads",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 749
+    },
+    {
+      "text": "Streetlight not working for two weeks, street completely dark at night, chori ka dar hai.",
+      "label_category": "streetlights",
+      "label_priority": "normal",
+      "category": "streetlights",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 749
+    },
+    {
+      "text": "Bulb flickering on and off every night on pole number 17.",
+      "label_category": "streetlights",
+      "label_priority": "low",
+      "category": "streetlights",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 758
+    },
+    {
+      "text": "All lights on the service road are off, women scared to walk after isha.",
+      "label_category": "streetlights",
+      "label_priority": "high",
+      "category": "streetlights",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 759
+    },
+    {
+      "text": "Streetlight stays on in daytime also, electricity wasting.",
+      "label_category": "streetlights",
+      "label_priority": "low",
+      "category": "streetlights",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 561
+    },
+    {
+      "text": "Pole light fallen down after truck hit it, wires lying on footpath.",
+      "label_category": "streetlights",
+      "label_priority": "high",
+      "category": "streetlights",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1053
+    },
+    {
+      "text": "Stray dogs in big group near primary school, bachon ko kaat liya yesterday.",
+      "label_category": "other",
+      "label_priority": "high",
+      "category": "other",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 750
+    },
+    {
+      "text": "Wedding hall playing loud music till 3 am every night, nobody can sleep.",
+      "label_category": "other",
+      "label_priority": "normal",
+      "category": "other",
+      "priority": "normal",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 1057
+    },
+    {
+      "text": "Illegal parking of water tankers blocking whole lane in morning, ambulance could not enter.",
+      "label_category": "other",
+      "label_priority": "normal",
+      "category": "roads",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 750
+    },
+    {
+      "text": "Park ki boundary wall broken, drug addicts sitting inside at night.",
+      "label_category": "other",
+      "label_priority": "normal",
+      "category": "other",
+      "priority": "high",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 536
+    },
+    {
+      "text": "Signboard of our street fallen, delivery riders cannot find address.",
+      "label_category": "other",
+      "label_priority": "low",
+      "category": "other",
+      "priority": "low",
+      "triaged_by": "llm:groq",
+      "fallback": false,
+      "error_class": null,
+      "latency_ms": 773
+    }
+  ]
+}

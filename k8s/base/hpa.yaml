@@ -1,0 +1,19 @@
+# Utilisation = usage / requests.cpu, so the 100m request in backend.yaml is the denominator.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: backend }
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 60 }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0 # users are waiting
+    scaleDown:
+      stabilizationWindowSeconds: 300 # flapping is expensive

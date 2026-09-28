@@ -1,0 +1,102 @@
+# Production stack (T-M6-007, FR-CTR-011). Images by commit SHA only (ADR-0003, AD-062):
+# no build:, no bind mounts, no published database or cache port (BR-SEC-005).
+# IMAGE_TAG=<sha> docker compose -f compose.prod.yaml up -d --wait
+name: civic-station
+
+x-backend: &backend
+  image: ${IMAGE_REGISTRY:-ghcr.io/nu-abdulrehman}/civic-station-backend:${IMAGE_TAG:?IMAGE_TAG must be a commit SHA}
+  environment:
+    DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?set in .env}:${POSTGRES_PASSWORD:?set in .env}@database:5432/${POSTGRES_DB:?set in .env}
+    REDIS_URL: redis://cache:6379/0
+    TRIAGE_PROVIDER: ${TRIAGE_PROVIDER:-rules}
+    GROQ_API_KEY: ${GROQ_API_KEY:-}
+    TRIAGE_MODEL: ${TRIAGE_MODEL:-qwen/qwen3.8-27b}
+    LOG_LEVEL: INFO
+    APP_VERSION: ${IMAGE_TAG} # runtime, never a build arg (AD-014)
+
+services:
+  frontend:
+    image: ${IMAGE_REGISTRY:-ghcr.io/nu-abdulrehman}/civic-station-frontend:${IMAGE_TAG:?IMAGE_TAG must be a commit SHA}
+    environment:
+      BACKEND_ORIGIN: http://backend:8000
+    ports: ["8080:8080"]
+    networks: [edge]
+    depends_on:
+      backend: { condition: service_healthy }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "0.1", memory: 128M }
+        reservations: { cpus: "0.02", memory: 32M }
+
+  backend:
+    <<: *backend
+    networks: [edge, internal, egress]
+    depends_on:
+      database: { condition: service_healthy }
+      cache: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+        reservations: { cpus: "0.1", memory: 256M }
+
+  migrate:
+    <<: *backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+    command: ["sh", "-c", "alembic upgrade head && python -m seeds.complaints"]
+    healthcheck: { disable: true }
+    networks: [internal]
+    depends_on:
+      database: { condition: service_healthy }
+    restart: "no"
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
+
+  database:
+    image: postgres:16.15-alpine3.24
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1G }
+        reservations: { cpus: "0.2", memory: 512M }
+
+  cache:
+    image: redis:7.4.11-alpine3.21
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes: [redisdata:/data]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "0.2", memory: 256M }
+        reservations: { cpus: "0.05", memory: 64M }
+
+networks:
+  edge: {}
+  internal:
+    internal: true
+  egress: {}
+
+volumes:
+  pgdata: {}
+  redisdata: {}

@@ -1,0 +1,55 @@
+# AOF on a PVC (FR-CACHE-005, T-M4-008): rate-limit counters and the triage cache survive a restart.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redisdata
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests: { storage: 1Gi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  strategy: { type: Recreate } # one RWO volume: the old pod must release it first
+  selector:
+    matchLabels: { app: redis }
+  template:
+    metadata:
+      labels: { app: redis }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.4.11-alpine3.21
+          args: ["--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+          ports: [{ name: redis, containerPort: 6379 }]
+          volumeMounts:
+            - { name: redisdata, mountPath: /data }
+          livenessProbe:
+            exec: { command: ["redis-cli", "ping"] }
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 2
+          readinessProbe:
+            exec: { command: ["redis-cli", "ping"] }
+            periodSeconds: 5
+            failureThreshold: 2
+            timeoutSeconds: 2
+          resources: # AD-048
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 256Mi }
+      volumes:
+        - name: redisdata
+          persistentVolumeClaim: { claimName: redisdata }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  type: ClusterIP
+  selector: { app: redis }
+  ports: [{ name: redis, port: 6379, targetPort: redis }]

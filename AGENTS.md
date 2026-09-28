@@ -10,7 +10,7 @@ Two-developer build of a municipal complaint intake and AI-triage system. Backen
 FastAPI + Pydantic v2 (fully async), SQLAlchemy 2.0 async + asyncpg, PostgreSQL 16,
 Redis 7. Frontend: React 18 + Vite + TypeScript, served by `nginx:1.27-alpine`. Deploy
 target: Kubernetes on k3d (bundled Traefik, Kustomize), with GitHub Actions CI/CD. The
-triage provider is Groq (`llama-3.1-8b-instant`) behind a `TriageProvider` seam, with
+triage provider is Groq (`qwen/qwen3.8-27b`) behind a `TriageProvider` seam, with
 Ollama, keyword rules, and a seeded simulator as alternatives.
 
 **Status:** planning is done and audited; implementation has not started. Code paths

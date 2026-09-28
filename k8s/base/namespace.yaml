@@ -1,0 +1,5 @@
+# RFC 1123 form of the product name (AD-030). Nothing is deployed to `default`.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: civic-station

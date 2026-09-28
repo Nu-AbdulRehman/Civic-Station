@@ -1,0 +1,29 @@
+# Secrets (CLAUDE.md HARD rule 1) — only .env.example is committed
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Throwaway overlays written by scripts/deploy-k8s.sh
+k8s/overlays/.deploy-*/
