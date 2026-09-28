@@ -5,12 +5,16 @@ on:
     branches: [dev, main]
   push:
     branches: [dev]
+  # cd.yml and release.yml run these same eight jobs as their `test` gate (FR-CICD-009).
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # When called, github.workflow is the caller's name (CD, Release), so a deploy's test run never
+  # shares a group with, or is cancelled by, a PR or dev-push run.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

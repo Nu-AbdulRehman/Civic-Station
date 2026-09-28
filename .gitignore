@@ -24,3 +24,6 @@ coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Throwaway overlays written by scripts/deploy-k8s.sh
+k8s/overlays/.deploy-*/

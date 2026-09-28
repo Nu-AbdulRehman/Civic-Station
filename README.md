@@ -48,6 +48,21 @@ only and is never applied. To use Groq on the cluster, create the Secret with a 
 running the script, as `secret.example.yaml` shows. `k3d cluster delete civic-station` removes
 everything.
 
+## Continuous delivery
+
+`.github/workflows/cd.yml` runs on every push to `main`: the eight `ci.yml` jobs as `test`, then
+`build-push` (both images to GHCR as `:<sha>` and `:latest`, an SPDX SBOM per image kept 90 days,
+digests as job outputs), then `deploy-k8s`. The deploy job creates a k3d cluster in the runner,
+deploys the previous `main` commit as a baseline, deploys the new SHA over it with
+`scripts/deploy-k8s.sh`, and smoke-tests through the Ingress. If the smoke test fails, the job
+runs `kubectl rollout undo` back to the baseline and exits red (`AD-065`). Run it by hand with
+**Actions → CD → Run workflow**; tick `force_smoke_failure` to exercise the rollback.
+`release.yml` publishes semver images, SBOMs and release notes on a `v*` tag.
+
+One repository secret is required: **`GROQ_API_KEY`**, the bare `gsk_…` value with no quotes (Settings → Secrets and variables →
+Actions). The deployed provider is `llm`, and the smoke test fails if triage falls back to rules.
+Registry access uses the workflow's own `GITHUB_TOKEN`; no other credential exists.
+
 ## Database migrations and seed
 
 The schema is created only by Alembic, never at application startup (`BR-DATA-001`). Both

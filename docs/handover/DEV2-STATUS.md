@@ -3,7 +3,7 @@
 Tracks every task whose `Owner` is Dev 2 (or shared) in the design-doc task tables. Update the row
 when a task's `Done when` condition is demonstrably true, not when the code merely exists.
 
-**Last updated:** 2026-09-28, on `feat/T-M7-002-k8s-manifests`.
+**Last updated:** 2026-09-28, on `ci/T-M8-009-cd-pipeline`.
 
 Legend: **Done** = `Done when` verified · **Built** = in the tree, verification step still owed ·
 **Partial** = some of the task exists · **Todo** = not started · **?** = cannot be checked from
@@ -24,7 +24,7 @@ the repository (GitHub settings); confirm by hand.
 | P9 Ollama + volume notes | T-M6-010/011 | T-M6-011 **Done**; T-M6-010 Built, not run (needs the model pull) |
 | P10 CI integration | T-M8-008 | Built — first real run happens on this branch's PR |
 | P11–P15 Kubernetes | T-M7-001…011, T-M9-002 | **Done** on local k3d, except T-M7-009's "recommendations after load" (needs P19) |
-| P16–P18 CD, release | T-M8-009…012 | Todo (T-M8-012 partial: `ci.yml` has `permissions: contents: read`, actions pinned by tag, not SHA) |
+| P16–P18 CD, release | T-M8-009…012 | Built — `cd.yml`, `release.yml`; deploy path rehearsed locally on k3d. Owed: a green run on `main` (needs the `GROQ_API_KEY` repository secret) and one forced-failure run |
 | P19–P21 load, VPA, demos | T-M9-001…008, T-M7-012/013, T-M3-009, T-M4-008 (k8s part)/009/010 | T-M4-008/009, T-M7-012 **Done**; T-M7-013 measured but the undo bound is missed; rest Todo |
 | P22 check_submission §5.3 | T-M8-014 | Todo (only the M2 layer checks exist) |
 | P23 zero-downtime | T-M9-009 | Todo |
@@ -85,8 +85,10 @@ the repository (GitHub settings); confirm by hand.
 | T-M8-006 | Built | `scan` job; both images scan clean locally with Trivy 0.56.2 (`--ignore-unfixed`, HIGH/CRITICAL) |
 | T-M8-007 | Built | `manifests` job now validates both overlays with kubeconform (VPA schema from the pinned CRDs catalog) and fails on `:latest`; first CI run on this branch's PR |
 | T-M8-008 | Built | `integration` job; every step it runs was reproduced locally against `compose.yaml` |
-| T-M8-009…011 | Todo | `cd.yml`, `release.yml` |
-| T-M8-012 | Partial | Actions pinned by tag (`@v4`), not by commit SHA |
+| T-M8-009 | Built | `cd.yml` `test` (reusable `ci.yml`) → `build-push` (GHCR `:<sha>` + `:latest`, SPDX SBOM artifacts 90 days, digest outputs). Owed: first run on `main` |
+| T-M8-010 | Built | `deploy-k8s`: k3d in runner, baseline = previous `main` commit, new SHA over it, Ingress smoke (exact `triaged_by`), `get hpa`, `rollout undo` on failure (`AD-065`). Rehearsed locally: `docs/evidence/cd-local-rehearsal.txt`. Owed: the green run link (submission item 2) and a `force_smoke_failure` run |
+| T-M8-011 | Built | `release.yml` on `v*`: `needs: test`, semver + SHA images, SBOMs attached, generated notes. Owed: one test tag |
+| T-M8-012 | **Done** (baseline) | `permissions:` per workflow and per job (`packages: write` only on publishing jobs, `contents: write` only on release). Actions pinned by major tag, which meets `FR-CICD-011`; SHA pinning is the bonus |
 | T-M8-013 | Todo | Red-then-green merge-block evidence |
 | T-M8-014 | Todo | §5.3 detectors in `scripts/check_submission.py` |
 | T-M8-015 | Todo | Notes Q2 |
