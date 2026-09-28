@@ -1,0 +1,27 @@
+2026-09-28T17:11:34Z NAME      REFERENCE            TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+2026-09-28T17:11:34Z backend   Deployment/backend   cpu: 4%/60%   2         10        2          13m
+2026-09-28T17:11:44Z backend   Deployment/backend   cpu: 5%/60%   2         10        2          13m
+2026-09-28T17:11:59Z backend   Deployment/backend   cpu: 4%/60%   2         10        2          13m
+2026-09-28T17:12:14Z backend   Deployment/backend   cpu: 176%/60%   2         10        2          13m
+2026-09-28T17:12:29Z backend   Deployment/backend   cpu: 219%/60%   2         10        6          14m
+2026-09-28T17:12:44Z backend   Deployment/backend   cpu: 223%/60%   2         10        8          14m
+2026-09-28T17:12:59Z backend   Deployment/backend   cpu: 124%/60%   2         10        8          14m
+2026-09-28T17:13:14Z backend   Deployment/backend   cpu: 122%/60%   2         10        10         14m
+2026-09-28T17:13:29Z backend   Deployment/backend   cpu: 112%/60%   2         10        10         15m
+2026-09-28T17:13:44Z backend   Deployment/backend   cpu: 141%/60%   2         10        10         15m
+2026-09-28T17:13:59Z backend   Deployment/backend   cpu: 126%/60%   2         10        10         15m
+2026-09-28T17:14:14Z backend   Deployment/backend   cpu: 138%/60%   2         10        10         15m
+2026-09-28T17:14:29Z backend   Deployment/backend   cpu: 121%/60%   2         10        10         16m
+2026-09-28T17:14:44Z backend   Deployment/backend   cpu: 119%/60%   2         10        10         16m
+2026-09-28T17:14:59Z backend   Deployment/backend   cpu: 133%/60%   2         10        10         16m
+2026-09-28T17:15:14Z backend   Deployment/backend   cpu: 136%/60%   2         10        10         16m
+2026-09-28T17:15:29Z backend   Deployment/backend   cpu: 134%/60%   2         10        10         17m
+2026-09-28T17:15:44Z backend   Deployment/backend   cpu: 143%/60%   2         10        10         17m
+2026-09-28T17:15:59Z backend   Deployment/backend   cpu: 137%/60%   2         10        10         17m
+2026-09-28T17:16:14Z backend   Deployment/backend   cpu: 153%/60%   2         10        10         17m
+2026-09-28T17:16:29Z backend   Deployment/backend   cpu: 160%/60%   2         10        10         18m
+2026-09-28T17:16:44Z backend   Deployment/backend   cpu: 51%/60%    2         10        10         18m
+2026-09-28T17:16:59Z backend   Deployment/backend   cpu: 4%/60%     2         10        10         18m
+2026-09-28T17:21:30Z backend   Deployment/backend   cpu: 4%/60%     2         10        10         23m
+2026-09-28T17:21:45Z backend   Deployment/backend   cpu: 4%/60%     2         10        9          23m
+2026-09-28T17:22:00Z backend   Deployment/backend   cpu: 4%/60%     2         10        2          23m
