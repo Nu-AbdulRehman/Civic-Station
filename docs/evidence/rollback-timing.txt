@@ -1,0 +1,41 @@
+# Rollback timing (T-M7-013, FR-K8S-014, ADR-0003). Captured 2026-09-27T19:31:51Z on local k3d
+# (1 server + 2 agents in Docker Desktop), dev overlay (backend limit 250m CPU).
+# The 'bad' release is a throwaway overlay changing the ConfigMap (APP_VERSION=bad), so it rolls a
+# new ReplicaSet like a real release. good = app-config-m57dmb7mmd, bad = app-config-6c7gtfc4g7.
+# Each timing runs from issuing the command to 'kubectl rollout status' returning.
+
+## Run 1
+bad release applied
+  running: bad release (app-config-6c7gtfc4g7), updated/ready replicas 2/2
+### Imperative: kubectl rollout undo deployment/backend (bound 30 s)
+  elapsed to rollout status: 36.1 s
+  running: good release (app-config-m57dmb7mmd), updated/ready replicas 2/2
+bad release applied
+  running: bad release (app-config-6c7gtfc4g7), updated/ready replicas 2/2
+### Declarative: kubectl apply -k k8s/overlays/dev (bound 90 s)
+  elapsed to rollout status: 36.7 s
+  running: good release (app-config-m57dmb7mmd), updated/ready replicas 2/2
+
+## Run 2
+bad release applied
+  running: bad release (app-config-6c7gtfc4g7), updated/ready replicas 2/2
+### Imperative: kubectl rollout undo deployment/backend (bound 30 s)
+  elapsed to rollout status: 38.6 s
+  running: good release (app-config-m57dmb7mmd), updated/ready replicas 2/2
+bad release applied
+  running: bad release (app-config-6c7gtfc4g7), updated/ready replicas 2/2
+### Declarative: kubectl apply -k k8s/overlays/dev (bound 90 s)
+  elapsed to rollout status: 38.8 s
+  running: good release (app-config-m57dmb7mmd), updated/ready replicas 2/2
+
+## Run 3
+bad release applied
+  running: bad release (app-config-6c7gtfc4g7), updated/ready replicas 2/2
+### Imperative: kubectl rollout undo deployment/backend (bound 30 s)
+  elapsed to rollout status: 38.9 s
+  running: good release (app-config-m57dmb7mmd), updated/ready replicas 2/2
+bad release applied
+  running: bad release (app-config-6c7gtfc4g7), updated/ready replicas 2/2
+### Declarative: kubectl apply -k k8s/overlays/dev (bound 90 s)
+  elapsed to rollout status: 36.6 s
+  running: good release (app-config-m57dmb7mmd), updated/ready replicas 2/2

@@ -1,0 +1,9 @@
+# Recommend only. Auto mode would fight the CPU HPA over the same signal (08-M7 §4.2, notes Q6).
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: backend-vpa
+spec:
+  targetRef: { apiVersion: apps/v1, kind: Deployment, name: backend }
+  updatePolicy:
+    updateMode: "Off"

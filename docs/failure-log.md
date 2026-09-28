@@ -53,3 +53,13 @@ reconstructed from memory; from here on, entries are appended as the failure hap
 - **Symptom:** Trivy with `--ignore-unfixed` found 40 HIGH/CRITICAL (openssl, c-ares, expat) in `nginx:1.27.5-alpine`.
 - **Wrongly believed:** pinning the version the design doc names is enough for a clean scan.
 - **Truth:** the 1.27 line sits on Alpine 3.21, which no longer receives rebuilds, so fixed CVEs accumulate. Pinning freezes vulnerabilities as well as behaviour; the pin has to be to a maintained line (`AD-063`).
+
+### 2026-09-28 · P12 · Backend pods crash-looped on the cluster with `BACKEND_PORT: Input should be a valid integer`
+- **Symptom:** the migrate init container succeeded, then the backend container exited at startup with `Invalid configuration: BACKEND_PORT: Input should be a valid integer, unable to parse string as an integer`. The ConfigMap sets no `BACKEND_PORT`.
+- **Wrongly believed:** a container's environment is exactly what the manifest lists.
+- **Truth:** the kubelet injects Docker-link-style variables for every Service in the namespace. A Service named `backend` produces `BACKEND_PORT=tcp://10.43.x.x:8000`, which collides with the settings field of the same name. Fixed with `enableServiceLinks: false` on both Deployments. Nothing in the app uses those variables; all addressing is by DNS name (`BR-SEC-004`).
+
+### 2026-09-28 · P21 · First rollback measurements reported the wrong release as live
+- **Symptom:** after `kubectl rollout undo` or a re-apply, `GET /api/version` through the Ingress sometimes still returned the bad release, and a second `apply` of the bad overlay after an `undo` changed nothing.
+- **Wrongly believed:** once `kubectl rollout status` returns, every request hits the new pods; and `kubectl apply` always converges the live object to the file.
+- **Truth:** two separate effects. (1) `rollout status` returns when old pods are *terminating*, but they keep serving through their 5 s `preStop` sleep, so a request right after can land on them. The check now reads the Deployment's ConfigMap reference instead of sampling traffic. (2) `rollout undo` does not update apply's `last-applied-configuration` annotation, so applying the same bad state again computes an empty patch. After an `undo`, re-apply the good overlay to re-sync the annotation; the runbook must say so. A `kubectl set env` probe was also useless as a "bad release": apply never removes fields it did not set.

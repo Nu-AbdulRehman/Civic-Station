@@ -1,0 +1,32 @@
+# Base for every environment (FR-K8S-012, AD-011). Never applied on its own: the overlays set
+# the image tags; base images carry no tag. The Secret is not a resource here (AD-064).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: civic-station
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: civic-station
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - redis.yaml
+  - backend.yaml
+  - frontend.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - vpa.yaml
+  - pdb.yaml
+configMapGenerator:
+  - name: app-config
+    literals:
+      - POSTGRES_USER=civic
+      - POSTGRES_DB=civic
+      - REDIS_URL=redis://redis:6379/0
+      - TRIAGE_PROVIDER=rules
+      - TRIAGE_MODEL=qwen/qwen3.8-27b
+      - TRIAGE_TIMEOUT_SECONDS=10
+      - RATE_LIMIT_REQUESTS=10
+      - RATE_LIMIT_WINDOW_SECONDS=60
+      - LOG_LEVEL=INFO
+      - APP_VERSION=unknown
+      - BACKEND_ORIGIN=http://backend:8000
