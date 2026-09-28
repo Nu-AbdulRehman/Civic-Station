@@ -1,0 +1,18 @@
+# Cluster-level Ingress controller settings, applied by scripts/k3d-cluster.sh (AD-068).
+# k3s installs Traefik from a Helm chart; a HelmChartConfig overrides its values.
+# externalTrafficPolicy: Local keeps the client's source address instead of SNATing it to the
+# receiving node's, so X-Forwarded-For names the client and the per-IP rate limiter has one
+# bucket per client (AD-054). A DaemonSet puts Traefik on every node, because with Local a node
+# with no Traefik pod drops the traffic it receives.
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    deployment:
+      kind: DaemonSet
+    service:
+      spec:
+        externalTrafficPolicy: Local

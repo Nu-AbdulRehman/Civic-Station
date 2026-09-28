@@ -155,6 +155,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
 - 2026-09-28 · ci/T-M8-009-cd-pipeline · P16–P18 (T-M8-009/010/011/012): `cd.yml` (test via
   reusable `ci.yml`, build-push to GHCR with SBOMs and digests, deploy-k8s with baseline + rollback),
   `release.yml`, `scripts/{publish-images,deploy-k8s,k3d-cluster}.sh`, AD-065, local rehearsal evidence.
+- 2026-09-28 · feat/T-M9-001-load-scaling · P19–P23 + P22 + loose ends (T-M9-001…004/006/008/009,
+  T-M7-009/013, T-M8-014, T-M4-010, T-M3-009, T-M6-008/009, T-M2-012 check): k6 script, scaling capture
+  and plot scripts, VPA loop (requests 100m → 182m), §5.3 detectors + 26 tests, Traefik `Local` fix
+  (AD-068), rate-limiter, zero-downtime, rollback, drain, persistence and clean-clone evidence;
+  AD-066/067/068.
 
 ## Skill invocations
 
@@ -416,3 +421,33 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   so the smoke test caught a 401 as `rules:fallback` — the check works, and a quoted value in the
   GitHub secret would fail the same way.
 - **I changed:** fixed (1)–(4); (5) documented in the README's secret instructions.
+
+### 2026-09-28 · feat/T-M9-001-load-scaling
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for P19–P23, P22 and the open loose ends, from
+  `10-M9-load-evidence.md` §7 and `09-M8-cicd.md` §10.
+- **I changed:** The list was produced after the load script and first detectors were already
+  written, not before, which breaks `CLAUDE.md` §6 rule 1 for this phase. Disclosed here rather than
+  back-dated.
+
+### 2026-09-28 · feat/T-M9-001-load-scaling
+- **Tool:** Claude Code (design forks recorded as `AD-066`, `AD-067`, `AD-068` without a separate
+  `ponytail` run)
+- **Shaped / Wrote:** The `localhost` detector's scope (`AD-066`), k6 raw data kept out of git
+  (`AD-067`), and Traefik as a DaemonSet with `externalTrafficPolicy: Local` (`AD-068`).
+- **I changed:** Each fork is recorded with at least two rejected alternatives, but the skill was
+  not invoked at the moment the fork appeared. Disclosed rather than reconstructed.
+
+### 2026-09-28 · feat/T-M9-001-load-scaling
+- **Tool:** Claude Code, diff self-review plus mutation check (the installed `grilling` skill
+  questions a person, not a diff)
+- **Shaped / Wrote:** Findings: (1) every §5.3 detector was disabled in turn
+  (`return []`) and its tests went red (1–6 failures each), so none of the 26 tests is decoration;
+  (2) `compose.yaml:3` carried `http://127.0.0.1:8080` in a comment, the only real finding the new
+  `localhost` detector made — reworded; (3) `scripts/k3d-up.sh` 180 s postgres timeout failed on a
+  cold cluster — raised to 600 s; (4) the rate limiter was split per node by kube-proxy SNAT — fixed
+  at the Ingress controller (`AD-068`), found only by the exact-count test; (5)
+  `scripts/plot_scaling.py` resolved to Python 3.14 and hung on a matplotlib source build — pinned
+  to 3.12; (6) `load/k6-script.js` idle stage is dropped by k6 v2 — WONTFIX, the watcher covers the
+  scale-down window.
+- **I changed:** fixed (2)–(5); (1) is the verification; (6) documented in `docs/failure-log.md`.
