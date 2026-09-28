@@ -1,6 +1,6 @@
 # Development stack (T-M6-004, FR-CTR-005/007/008/009/010, AD-002, ADR-0005).
 # Quickstart: cp .env.example .env && docker compose up -d --build --wait
-# Then open http://civic-station.localhost:8080 (or http://127.0.0.1:8080).
+# Then open http://civic-station.localhost:8080 in a browser.
 name: civic-station
 
 x-backend: &backend
