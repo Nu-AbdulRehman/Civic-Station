@@ -1,0 +1,161 @@
+{
+    "metrics": {
+        "checks": {
+            "passes": 20295,
+            "fails": 0,
+            "value": 1
+        },
+        "iterations": {
+            "count": 2255,
+            "rate": 8.346266755797195
+        },
+        "http_req_sending": {
+            "avg": 0.030902591643673604,
+            "min": 0,
+            "med": 0,
+            "max": 3.5994,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 40
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 449.1822735465158,
+            "min": 0,
+            "med": 91.8356,
+            "max": 10597.9832,
+            "p(90)": 1199.01875,
+            "p(95)": 1805.2615
+        },
+        "http_req_connecting": {
+            "avg": 0.003070171462357115,
+            "min": 0,
+            "med": 0,
+            "max": 20.1616,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "data_sent": {
+            "count": 2675160,
+            "rate": 9901.374268043648
+        },
+        "vus_max": {
+            "value": 40,
+            "min": 40,
+            "max": 40
+        },
+        "http_req_duration": {
+            "avg": 449.1822735465158,
+            "min": 0,
+            "med": 91.8356,
+            "max": 10597.9832,
+            "p(90)": 1199.01875,
+            "p(95)": 1805.2615,
+            "thresholds": {
+                "p(95)<2000": false
+            }
+        },
+        "http_req_receiving": {
+            "avg": 0.15034639337800543,
+            "min": 0,
+            "med": 0,
+            "max": 17.7528,
+            "p(90)": 0.5865,
+            "p(95)": 0.650925
+        },
+        "iteration_duration": {
+            "max": 18905.5354,
+            "p(90)": 8810.011340000001,
+            "p(95)": 11031.242029999981,
+            "avg": 4045.78093454545,
+            "min": 61.2143,
+            "med": 3496.1545
+        },
+        "http_reqs": {
+            "count": 20296,
+            "rate": 75.12010202911746
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 20296,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_blocked": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.011519555577453681,
+            "min": 0,
+            "med": 0,
+            "max": 20.1616
+        },
+        "data_received": {
+            "count": 27099398,
+            "rate": 100301.022008655
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_waiting": {
+            "p(95)": 1805.04155,
+            "avg": 449.0010245614908,
+            "min": 0,
+            "med": 91.74565000000001,
+            "max": 10597.9832,
+            "p(90)": 1198.5097
+        }
+    },
+    "setup_data": {
+        "category": [
+            "sanitation",
+            "roads",
+            "streetlights",
+            "other",
+            "water",
+            "electricity"
+        ],
+        "priority": [
+            "high",
+            "normal",
+            "low"
+        ],
+        "status": [
+            "open",
+            "in_progress",
+            "resolved",
+            "rejected"
+        ]
+    },
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "list 200": {
+                    "name": "list 200",
+                    "path": "::list 200",
+                    "id": "bb957fc3b3b94304050fa1ff782f2f89",
+                    "passes": 18040,
+                    "fails": 0
+                },
+                "stats 200": {
+                    "name": "stats 200",
+                    "path": "::stats 200",
+                    "id": "372ed7a2e9a6ed3bef752e28c5df1a14",
+                    "passes": 2255,
+                    "fails": 0
+                }
+            },
+        "name": ""
+    }
+}

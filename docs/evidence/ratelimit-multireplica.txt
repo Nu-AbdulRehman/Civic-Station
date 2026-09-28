@@ -1,0 +1,50 @@
+# Distributed rate limiter, 4 replicas (T-M9-008, FR-CACHE-007). 2026-09-28T17:53:03Z
+# RATE_LIMIT_REQUESTS=10 per RATE_LIMIT_WINDOW_SECONDS=60, one client, through the Ingress.
+$ kubectl get pods -l app=backend
+NAME                       READY   STATUS    RESTARTS   AGE
+backend-5555d7db48-9bllg   1/1     Running   0          2m46s
+backend-5555d7db48-lr7l8   1/1     Running   0          2m46s
+backend-5555d7db48-p7zt6   1/1     Running   0          12m
+backend-5555d7db48-pwp92   1/1     Running   0          10m
+
+## 30 x POST /api/complaints
+request 1: 201
+request 2: 201
+request 3: 201
+request 4: 201
+request 5: 201
+request 6: 201
+request 7: 201
+request 8: 201
+request 9: 201
+request 10: 201
+request 11: 429 Retry-After=53
+request 12: 429 Retry-After=52
+request 13: 429 Retry-After=52
+request 14: 429 Retry-After=52
+request 15: 429 Retry-After=51
+request 16: 429 Retry-After=51
+request 17: 429 Retry-After=51
+request 18: 429 Retry-After=50
+request 19: 429 Retry-After=50
+request 20: 429 Retry-After=50
+request 21: 429 Retry-After=49
+request 22: 429 Retry-After=49
+request 23: 429 Retry-After=49
+request 24: 429 Retry-After=48
+request 25: 429 Retry-After=48
+request 26: 429 Retry-After=48
+request 27: 429 Retry-After=47
+request 28: 429 Retry-After=47
+request 29: 429 Retry-After=47
+request 30: 429 Retry-After=46
+
+## Totals
+     10 201
+     20 429
+
+## POSTs answered per pod
+pod/backend-5555d7db48-9bllg: 7
+pod/backend-5555d7db48-lr7l8: 6
+pod/backend-5555d7db48-p7zt6: 8
+pod/backend-5555d7db48-pwp92: 9

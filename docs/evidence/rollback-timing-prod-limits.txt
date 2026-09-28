@@ -1,0 +1,39 @@
+# Rollback timing re-measured with the backend at its prod-overlay limits (T-M7-013, FR-K8S-014).
+# 2026-09-28T17:57:54Z, local k3d. Same protocol as rollback-timing.txt; the only change is the backend
+# CPU limit, 500m (AD-048, prod overlay) instead of the dev overlay's 250m. Requests: 182m (VPA step 4).
+
+## Run 1
+bad release applied
+  running: bad release, updated/ready 2/2
+### Imperative: kubectl rollout undo deployment/backend (bound 30 s)
+  elapsed to rollout status: 24.5 s
+  running: good release, updated/ready 2/2
+bad release applied
+  running: bad release, updated/ready 2/2
+### Declarative: kubectl apply -k (good state) (bound 90 s)
+  elapsed to rollout status: 22.6 s
+  running: good release, updated/ready 2/2
+
+## Run 2
+bad release applied
+  running: bad release, updated/ready 2/2
+### Imperative: kubectl rollout undo deployment/backend (bound 30 s)
+  elapsed to rollout status: 24.1 s
+  running: good release, updated/ready 2/2
+bad release applied
+  running: bad release, updated/ready 2/2
+### Declarative: kubectl apply -k (good state) (bound 90 s)
+  elapsed to rollout status: 25.2 s
+  running: good release, updated/ready 2/2
+
+## Run 3
+bad release applied
+  running: bad release, updated/ready 2/2
+### Imperative: kubectl rollout undo deployment/backend (bound 30 s)
+  elapsed to rollout status: 22.3 s
+  running: good release, updated/ready 2/2
+bad release applied
+  running: bad release, updated/ready 2/2
+### Declarative: kubectl apply -k (good state) (bound 90 s)
+  elapsed to rollout status: 22.5 s
+  running: good release, updated/ready 2/2

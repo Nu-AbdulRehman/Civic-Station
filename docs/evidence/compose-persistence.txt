@@ -1,0 +1,16 @@
+# Compose persistence across 'docker compose down' and 'up' (T-M3-009, FR-DATA-005).
+# 2026-09-28T18:04:54Z. 'down' without -v removes the containers and keeps the named volumes.
+$ POST /api/complaints
+201
+$ select count(*), max(created_at) from complaints   # before
+31|2026-09-28 18:04:54.568668+00
+$ docker compose down
+8 objects removed
+$ docker volume ls (named volumes survive)
+civic-station_pgdata
+civic-station_redisdata
+k3d-civic-station-images
+$ docker compose up -d --wait
+stack healthy
+$ select count(*), max(created_at) from complaints   # after: same rows (the seed is idempotent)
+31|2026-09-28 18:04:54.568668+00

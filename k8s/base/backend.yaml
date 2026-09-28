@@ -79,8 +79,10 @@ spec:
           lifecycle:
             # Lets endpoint removal propagate before SIGTERM starts the drain (08-M7 §5).
             preStop: { exec: { command: ["sh", "-c", "sleep 5"] } }
-          resources: # AD-048 guess; the VPA loop corrects it (FR-LOAD-003)
-            requests: { cpu: 100m, memory: 256Mi }
+          # VPA loop step 4 (T-M9-006): requests set to backend-vpa's Target after load run 1
+          # (docs/evidence/vpa-recommendation.txt). The AD-048 guess was 100m / 256Mi.
+          resources:
+            requests: { cpu: 182m, memory: 250Mi }
             limits: { cpu: 500m, memory: 512Mi }
 ---
 apiVersion: v1
