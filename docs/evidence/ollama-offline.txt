@@ -1,0 +1,38 @@
+# Ollama offline path (T-M6-010, AD-046, T-M5-009 check). 2026-09-28T18:36:03Z, Compose.
+## 1. Empty ollama_models volume: the healthcheck fails with a named reason, it does not hang
+$ docker inspect civic-station-ollama-1 (health)
+unhealthy
+ollama_models volume has no llama3.2:1b; run make pull-models
+
+## 2. make pull-models  (= docker compose --profile pull run --rm ollama-pull, on the egress network)
+pulling 4f659a1e86d7: 100% ▕██████████████████▏  485 B                         
+verifying sha256 digest 
+writing manifest 
+success 
+took 554 s
+
+## 3. make pull-models again: a no-op
+llama3.2:1b already present
+took 3 s
+
+## 4. TRIAGE_PROVIDER=ollama docker compose --profile ollama up -d --wait
+Container civic-station-backend-1 Healthy 
+Container civic-station-ollama-1 Healthy 
+$ docker inspect civic-station-ollama-1 (health)
+healthy
+$ ollama has no route out: networks and an outbound attempt
+civic-station_internal 
+$ curl /api/version
+{"version":"dev","provider":"llm:ollama"}
+$ POST /api/complaints
+{'category': 'sanitation', 'priority': 'high', 'triaged_by': 'rules:fallback', 'triage_latency_ms': 20895, 'ai_summary': 'sanitation: Sewage has been overflowing onto the street outside the primary school for two days'}
+bash: connect: Network is unreachable
+bash: line 1: /dev/tcp/1.1.1.1/443: Network is unreachable
+outbound connection to 1.1.1.1:443 failed (no route: internal network)
+(first POST above: the model was still loading into memory; both 10 s calls timed out and the
+ rules fallback answered 201, as BR-TRIAGE-005 requires)
+$ POST /api/complaints (#2, model warm)
+{'category': 'streetlights', 'priority': 'normal', 'triaged_by': 'llm:ollama', 'triage_latency_ms': 19620}
+$ POST /api/complaints (#3, model warm)
+{'category': 'streetlights', 'priority': 'normal', 'triaged_by': 'llm:ollama', 'triage_latency_ms': 20276}
+# Latency ~20 s: CPU-only inference exceeds the first 10 s TRIAGE_TIMEOUT_SECONDS and the one retry answers (AD-007), close to the 21 s worst case.

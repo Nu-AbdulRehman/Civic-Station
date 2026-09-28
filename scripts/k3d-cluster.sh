@@ -19,6 +19,15 @@ kubectl config use-context "k3d-$CLUSTER" >/dev/null
 # VPA in recommender mode needs only the CRDs, RBAC and the recommender (updateMode "Off").
 kubectl apply -f "$VPA_RAW/vpa-v1-crd-gen.yaml" -f "$VPA_RAW/vpa-rbac.yaml" -f "$VPA_RAW/recommender-deployment.yaml"
 
+# Traefik as a DaemonSet with externalTrafficPolicy: Local, so the client address survives to
+# X-Forwarded-For and the per-IP limiter has one bucket per client (AD-068).
+kubectl apply -f "$(dirname "$0")/../k8s/cluster/traefik-config.yaml"
+until [ "$(kubectl get svc traefik -n kube-system -o jsonpath='{.spec.externalTrafficPolicy}' 2>/dev/null)" = Local ] \
+    && kubectl get ds traefik -n kube-system >/dev/null 2>&1; do
+    sleep 3
+done
+kubectl rollout status ds/traefik -n kube-system --timeout=300s
+
 kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
 # Real Secret, created once (AD-027, AD-064). Never re-created: the postgres PVC keeps the
 # password it was initialised with. Hex, so it is safe inside DATABASE_URL.

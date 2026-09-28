@@ -1,0 +1,27 @@
+# Recaptured after re-importing the current :dev image into k3d and restarting the frontend.
+# One frontend image, configured at start (FR-FE-014, NFR-PORT-001, ADR-0002). 2026-09-28T18:48:04Z
+$ docker save civic-station-frontend:dev | manifest.json Config  (the image Compose runs; config digest,
+$   because Docker's containerd store reports an index digest from 'image inspect' instead)
+sha256:0f161f3795d3414ee2d6db02fe2fa5eae2d00f446906c7232a9cb2f118b964ea
+$ crictl inspecti on a k3d node (the image the cluster runs, imported by scripts/k3d-up.sh)
+sha256:0f161f3795d3414ee2d6db02fe2fa5eae2d00f446906c7232a9cb2f118b964ea
+$ crictl ps --name frontend on k3d-civic-station-agent-0 (image the running pod uses)
+sha256:0f161f3795d3414ee2d6db02fe2fa5eae2d00f446906c7232a9cb2f118b964ea
+$ kubectl get pods -l app=frontend -o image
+frontend-5d5b57667f-5952r civic-station-frontend:dev
+frontend-5d5b57667f-rf74d civic-station-frontend:dev
+
+## The backend address is read at container start, not built in
+$ docker run -e BACKEND_ORIGIN=http://backend:8000 civic-station-frontend:dev   (rendered proxy_pass)
+        proxy_pass http://backend:8000;
+$ docker run -e BACKEND_ORIGIN=http://api.example.internal:9000 civic-station-frontend:dev   (rendered proxy_pass)
+2026/09/28 18:48:10 [emerg] 7#7: host not found in upstream "api.example.internal" in /etc/nginx/conf.d/default.conf:9
+nginx: [emerg] host not found in upstream "api.example.internal" in /etc/nginx/conf.d/default.conf:9
+        proxy_pass http://api.example.internal:9000;
+(nginx then refuses to start because that host does not resolve here; the point is that the address
+ in the rendered config is whatever the environment supplied)
+$ docker run civic-station-frontend:dev   (BACKEND_ORIGIN unset)
+entrypoint: BACKEND_ORIGIN is not set (expected e.g. http://backend:8000)
+exit code: 1
+$ grep -r "backend:8000" in the built bundle
+no backend address in /usr/share/nginx/html

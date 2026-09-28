@@ -14,7 +14,8 @@ docker build -t civic-station-frontend:dev frontend
 k3d image import -c "$CLUSTER" civic-station-backend:dev civic-station-frontend:dev
 
 kubectl apply -k k8s/overlays/dev
-kubectl rollout status statefulset/postgres -n "$NS" --timeout=180s
+# First run pulls the postgres image; 180 s was not enough on a cold cluster.
+kubectl rollout status statefulset/postgres -n "$NS" --timeout=600s
 kubectl rollout status deployment/redis -n "$NS" --timeout=180s
 kubectl rollout status deployment/backend -n "$NS" --timeout=300s
 kubectl rollout status deployment/frontend -n "$NS" --timeout=180s

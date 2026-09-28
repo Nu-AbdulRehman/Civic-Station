@@ -68,3 +68,22 @@ reconstructed from memory; from here on, entries are appended as the failure hap
 - **Symptom:** in the local rehearsal of `deploy-k8s`, every backend and frontend pod sat in `ImagePullBackOff` on `ghcr.io/nu-abdulrehman/civic-station-*:PLACEHOLDER_COMMIT_SHA`, although the deploy overlay set the tag to the SHA.
 - **Wrongly believed:** a Kustomize `images:` entry named `civic-station-backend` matches that image in every layer above base.
 - **Truth:** the prod overlay had already rewritten the name to `ghcr.io/nu-abdulrehman/civic-station-backend`, and a higher overlay matches the name as the layer below left it. The entry matched nothing and Kustomize said nothing. `scripts/deploy-k8s.sh` now matches the prod name and refuses to apply if the rendered output still contains `PLACEHOLDER_COMMIT_SHA`. Only a real deploy exposed it: `kubeconform` validates structure, not intent.
+
+### 2026-09-28 · P21 · The distributed rate limiter let 30 of 30 POSTs through with 4 replicas
+- **Symptom:** `scripts/ratelimit_multireplica.sh` returned 30 × 201 where the limit is 10 per minute. Redis held three keys: `cs:ratelimit:10.42.0.0`, `10.42.1.1` and `10.42.2.0`.
+- **Wrongly believed:** the Ingress passes the client's address through, so `X-Forwarded-For` plus `AD-054`'s resolver gives one bucket per client.
+- **Truth:** those are node addresses. Traefik's Service used `externalTrafficPolicy: Cluster`, so kube-proxy SNATed each request to the receiving node's address before Traefik saw it, and each of three node paths got its own ten requests. The application was correct; the address was lost one layer below it. Fixed at the Ingress controller: a DaemonSet with `externalTrafficPolicy: Local` (`AD-068`). Re-run: exactly 10 × 201 and 20 × 429. This was the only test that could catch it, which is the argument `10-M9` §6 makes for exact counts.
+
+### 2026-09-28 · P19 · k6 ended the scaling profile at 270 s, not 600 s
+- **Symptom:** the AD-050 profile's 330 s idle stage never ran; k6 exited when the ramp-down reached zero.
+- **Wrongly believed:** k6 holds a zero-VU stage for its duration.
+- **Truth:** with no VUs left, k6 v2 finishes early. The idle stage existed only to observe scale-down, and `scripts/watch_scaling.sh` samples for 660 s regardless, so the capture still shows the full curve back to 2 replicas.
+
+### 2026-09-28 · P19 · `uv run scripts/plot_scaling.py` hung for 15 minutes
+- **Symptom:** no output, no Python process, `uv` idle.
+- **Wrongly believed:** parsing a 52 MB k6 JSON file is slow.
+- **Truth:** the inline metadata said `requires-python = ">=3.12"`, so `uv` chose the machine's Python 3.14, for which the pinned matplotlib had no wheel, and it started a source build. Pinned to `==3.12.*`; the script now runs in 22 s including the install.
+
+### 2026-09-28 · P11 · `scripts/k3d-up.sh` failed on a fresh cluster
+- **Symptom:** `kubectl rollout status statefulset/postgres` timed out at 180 s; backend init containers crash-looped meanwhile.
+- **Truth:** a cold cluster pulls the postgres image first, which took longer than 180 s on this connection; the backend's migrate container retries until the database answers, as designed. Timeout raised to 600 s. The crash-looping init container is expected, not a fault.

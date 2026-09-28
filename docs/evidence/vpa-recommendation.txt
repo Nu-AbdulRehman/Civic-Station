@@ -1,0 +1,29 @@
+# VPA recommendation loop (T-M9-006, FR-LOAD-003, RUB-H-06). backend-vpa, updateMode "Off".
+# Step 1, the guess recorded before any load (AD-048, k8s/base/backend.yaml):
+#   requests cpu 100m / memory 256Mi, limits cpu 500m / memory 512Mi (dev overlay limit: 250m / 256Mi)
+# Step 2: run 1 of load/k6-script.js (docs/evidence/run1-*), ended 2026-09-28T17:22:34Z.
+# Step 3, captured 2026-09-28T17:28:08Z:
+$ kubectl describe vpa backend-vpa -n civic-station
+  Recommendation:
+    Container Recommendations:
+      Container Name:  backend
+      Lower Bound:
+        Cpu:     25m
+        Memory:  250Mi
+      Target:
+        Cpu:     182m
+        Memory:  250Mi
+      Uncapped Target:
+        Cpu:     182m
+        Memory:  250Mi
+      Upper Bound:
+        Cpu:     15251m
+        Memory:  7136398738
+Events:          <none>
+
+# Step 4: k8s/base/backend.yaml requests changed to the Target: cpu 100m -> 182m, memory 256Mi -> 250Mi
+#         (its own commit; limits unchanged). Applied with kubectl apply -k k8s/overlays/dev.
+# Step 5: the same load profile re-run (docs/evidence/run2-*). HPA behaviour, run 1 against run 2:
+#   run1 (request 100m): CPU 51-223% of request under load; desired replicas 2->6->8->10->9->2; 20665 requests, 0 failed, p95 1180 ms
+#   run2 (request 182m): CPU 14-129% of request under load; desired replicas 2->4->5->6->7->10->4->2; 20296 requests, 0 failed, p95 1805 ms
+#   First scale-out after load began: run 1 at 34 s, run 2 at 50 s (scripts/plot_scaling.py output).
