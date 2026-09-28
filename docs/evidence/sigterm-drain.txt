@@ -1,0 +1,17 @@
+# SIGTERM drain with a request in flight (T-M2-012, FR-BE-021). 2026-09-28T18:06:08Z, Compose.
+# Backend runs the image's exec-form CMD (uvicorn is PID 1). SIMULATED_FAILURE_MODE=slow and
+# TRIAGE_TIMEOUT_SECONDS=5 hold POST /api/complaints open for ~2 x 5 s + jitter before the rules
+# fallback answers 201. SIGTERM is sent 2 s after the POST starts.
+$ docker compose exec backend cat /proc/1/cmdline
+/app/.venv/bin/python /app/.venv/bin/uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 25 --no-proxy-headers 
+$ docker kill --signal=SIGTERM civic-station-backend-1   # t=2 s
+POST status 201 after 10.735260 s
+triaged_by: rules:fallback
+container exit code: 0, stopped 12.3 s after the POST started
+$ docker logs civic-station-backend-1 (shutdown lines)
+{"method": "POST", "path": "/api/complaints", "status_code": 201, "duration_ms": 10729.6, "request_id": "2344df5f-c0f5-4de8-8b02-f35ea2643fcc", "level": "INFO", "logger": "app.observability.middleware", "ts": "2026-09-28T18:06:19.
+{"level": "INFO", "logger": "uvicorn.error", "ts": "2026-09-28T18:06:19.595Z", "request_id": null, "msg": "Waiting for application shutdown."}
+{"level": "INFO", "logger": "app.main", "ts": "2026-09-28T18:06:19.595Z", "request_id": null, "msg": "shutdown.started"}
+{"level": "INFO", "logger": "app.main", "ts": "2026-09-28T18:06:19.604Z", "request_id": null, "msg": "shutdown.completed"}
+{"level": "INFO", "logger": "uvicorn.error", "ts": "2026-09-28T18:06:19.604Z", "request_id": null, "msg": "Application shutdown complete."}
+{"level": "INFO", "logger": "uvicorn.error", "ts": "2026-09-28T18:06:19.605Z", "request_id": null, "msg": "Finished server process [1]"}

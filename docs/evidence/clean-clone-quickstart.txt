@@ -1,0 +1,24 @@
+# Clean-clone quickstart (T-M6-009, FR-CTR-012, NFR-PORT-004). 2026-09-28T18:06:51Z
+# git clone --branch dev https://github.com/Nu-AbdulRehman/Civic-Station.git into an empty directory,
+# then the README 'Quickstart' commands verbatim (the without-make path; this Windows machine has no make).
+# Caveat: Docker's layer cache on this machine was warm, so this proves the files and commands, not a cold download.
+$ git log --oneline -1
+b76e71e Merge pull request #10 from Nu-AbdulRehman/feat/T-M7-002-k8s-manifests
+$ cp .env.example .env
+$ docker compose up -d --build --wait
+Container civic-station-database-1 Healthy 
+Container civic-station-cache-1 Healthy 
+Container civic-station-database-1 Healthy 
+Container civic-station-migrate-1 Exited 
+Container civic-station-backend-1 Healthy 
+Container civic-station-migrate-1 Exited 
+Container civic-station-cache-1 Healthy 
+Container civic-station-database-1 Healthy 
+Container civic-station-backend-1 Healthy 
+Container civic-station-frontend-1 Healthy 
+$ curl http://civic-station.localhost:8080/api/version   (Host header; curl has no *.localhost resolver on Windows)
+{"version":"dev","provider":"rules"}
+$ curl /api/stats (seeded by the migrate service)
+total complaints: 30
+$ curl / (the SPA through nginx)
+200
