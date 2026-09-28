@@ -152,6 +152,9 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
 - 2026-09-28 · feat/T-M7-002-k8s-manifests · P11–P15 (T-M7-001…012, T-M9-002, T-M4-008 k8s part):
   `k8s/base` + dev/prod overlays, `scripts/k3d-up.sh`, kubeconform in the CI `manifests` job, probe /
   persistence / rollout / rollback evidence, AD-064, notes, README, `DEV2-STATUS.md`.
+- 2026-09-28 · ci/T-M8-009-cd-pipeline · P16–P18 (T-M8-009/010/011/012): `cd.yml` (test via
+  reusable `ci.yml`, build-push to GHCR with SBOMs and digests, deploy-k8s with baseline + rollback),
+  `release.yml`, `scripts/{publish-images,deploy-k8s,k3d-cluster}.sh`, AD-065, local rehearsal evidence.
 
 ## Skill invocations
 
@@ -385,3 +388,31 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   open and stats return `MISS` (`BR-CACHE-007`).
 - **I changed:** fixed (1); (2), (3) carried to T-M8-010 and T-M10-005; (4) reported in the notes
   and the status file; (5) accepted.
+
+### 2026-09-28 · ci/T-M8-009-cd-pipeline
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for P16–P18 from `09-M8-cicd.md` §4–§6 (9 items, each
+  tagged T-M8-nnn).
+- **I changed:** accepted as-is.
+
+### 2026-09-28 · ci/T-M8-009-cd-pipeline
+- **Tool:** Claude Code + `ponytail`
+- **Shaped / Wrote:** Decision record for what an ephemeral-cluster deploy rolls back to, recorded as
+  `AD-065` (deploy the previous `main` commit first, then the new SHA over it).
+- **I changed:** accepted as-is.
+
+### 2026-09-28 · ci/T-M8-009-cd-pipeline
+- **Tool:** Claude Code, diff self-review plus a local rehearsal of `deploy-k8s` on k3d (the
+  installed `grilling` skill questions a person, not a diff)
+- **Shaped / Wrote:** Findings: (1) `scripts/deploy-k8s.sh` image override matched the base image
+  name, so the prod placeholder tag deployed — fixed to match the prod name, plus a guard that
+  refuses to apply a render containing `PLACEHOLDER_COMMIT_SHA`; (2) `.github/workflows/cd.yml`
+  baseline used `github.event.before`, which is empty on `workflow_dispatch`, so the forced-failure
+  run had nothing to roll back to — fixed with a `HEAD~1` fallback and `fetch-depth: 2`;
+  (3) `scripts/deploy-k8s.sh` smoke text was constant, so from the second deploy on the triage cache
+  would answer and the Groq check would test nothing — fixed by putting the SHA in the text;
+  (4) `.github/workflows/ci.yml` concurrency group was shared by every caller of the reusable
+  workflow — now keyed on `github.workflow`; (5) the `GROQ_API_KEY` in a local `.env` was quoted,
+  so the smoke test caught a 401 as `rules:fallback` — the check works, and a quoted value in the
+  GitHub secret would fail the same way.
+- **I changed:** fixed (1)–(4); (5) documented in the README's secret instructions.

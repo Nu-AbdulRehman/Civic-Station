@@ -1,0 +1,36 @@
+# Local rehearsal of cd.yml deploy-k8s (T-M8-010, AD-065). 2026-09-28T01:39:06Z, k3d cluster from
+# scripts/k3d-cluster.sh. One image under two tags: base0000 stands for the previous main commit,
+# new11111 for the pushed one. EXPECT_PROVIDER=llm (prod overlay, real Groq key in the cluster Secret).
+# The steps are the ones cd.yml runs; the rollback step runs because the smoke test is forced to fail.
+
+## Deploy baseline (previous main commit)
+deployment "backend" successfully rolled out
+deployment "frontend" successfully rolled out
+smoke: created 97493b77-3763-446a-a377-ae937384ce5e category=streetlights triaged_by=llm:groq
+smoke: base0000 ok
+exit: 0
+
+## Deploy new11111
+deployment "backend" successfully rolled out
+deployment "frontend" successfully rolled out
+
+## Smoke test through the Ingress (FORCE_SMOKE_FAILURE=true)
+smoke: created 4ec0aa57-4bf1-43ac-bb88-0d49e8debf52 category=streetlights triaged_by=llm:groq
+smoke: failing on purpose (force_smoke_failure)
+exit: 1
+
+## Roll back and report
+Warning: resource deployments/backend was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/backend rolled back
+Warning: resource deployments/frontend was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/frontend rolled back
+deployment "backend" successfully rolled out
+deployment "frontend" successfully rolled out
+smoke: created 1bfd88dc-656b-407a-9588-5799a0cd1976 category=streetlights triaged_by=llm:groq
+smoke: base0000 ok
+rolled back to base0000
+$ kubectl get deploy backend -o image
+ghcr.io/nu-abdulrehman/civic-station-backend:base0000
+$ kubectl get hpa
+NAME      REFERENCE            TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+backend   Deployment/backend   cpu: <unknown>/60%   2         10        2          12m
