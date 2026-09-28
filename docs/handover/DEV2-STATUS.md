@@ -3,7 +3,7 @@
 Tracks every task whose `Owner` is Dev 2 (or shared) in the design-doc task tables. Update the row
 when a task's `Done when` condition is demonstrably true, not when the code merely exists.
 
-**Last updated:** 2026-09-27, on `feat/T-M6-001-containers-compose`.
+**Last updated:** 2026-09-28, on `feat/T-M7-002-k8s-manifests`.
 
 Legend: **Done** = `Done when` verified · **Built** = in the tree, verification step still owed ·
 **Partial** = some of the task exists · **Todo** = not started · **?** = cannot be checked from
@@ -23,9 +23,9 @@ the repository (GitHub settings); confirm by hand.
 | P8 CI build/scan/manifests | T-M8-005/006/007 | Built — `build`/`scan` now have Dockerfiles to act on; `manifests` waits for `k8s/` |
 | P9 Ollama + volume notes | T-M6-010/011 | T-M6-011 **Done**; T-M6-010 Built, not run (needs the model pull) |
 | P10 CI integration | T-M8-008 | Built — first real run happens on this branch's PR |
-| P11–P15 Kubernetes | T-M7-001…011, T-M9-002 | Todo |
+| P11–P15 Kubernetes | T-M7-001…011, T-M9-002 | **Done** on local k3d, except T-M7-009's "recommendations after load" (needs P19) |
 | P16–P18 CD, release | T-M8-009…012 | Todo (T-M8-012 partial: `ci.yml` has `permissions: contents: read`, actions pinned by tag, not SHA) |
-| P19–P21 load, VPA, demos | T-M9-001…008, T-M7-012/013, T-M3-009, T-M4-008 (k8s part)/009/010 | T-M4-009 **Done**; rest Todo |
+| P19–P21 load, VPA, demos | T-M9-001…008, T-M7-012/013, T-M3-009, T-M4-008 (k8s part)/009/010 | T-M4-008/009, T-M7-012 **Done**; T-M7-013 measured but the undo bound is missed; rest Todo |
 | P22 check_submission §5.3 | T-M8-014 | Todo (only the M2 layer checks exist) |
 | P23 zero-downtime | T-M9-009 | Todo |
 | P24 runbook + notes | T-M10-005, T-M6-012, T-M8-015, T-M7-014 | Todo |
@@ -52,13 +52,28 @@ the repository (GitHub settings); confirm by hand.
 
 | ID | State | Evidence / what is left |
 |---|---|---|
-| T-M4-008 | Partial | AOF + `redisdata` in both Compose files (`CONFIG GET appendonly` → `yes`); k8s manifest part waits for M7 |
+| T-M4-008 | **Done** | AOF + `redisdata` in both Compose files and `k8s/base/redis.yaml` (PVC) |
 | T-M4-009 | **Done** | `ENGINEERING-NOTES.md`, `redisdata` paragraph |
 | T-M4-010 | Todo | Needs 4 backend replicas on the cluster |
 
 ## M7 — Kubernetes (`08-M7-kubernetes.md`)
 
-T-M7-001 … T-M7-014: all **Todo**. No `k8s/` directory exists yet.
+| ID | State | Evidence / what is left |
+|---|---|---|
+| T-M7-001 | **Done** | `scripts/k3d-up.sh`; k3s bundles metrics-server, `kubectl top nodes` returns data |
+| T-M7-002 | **Done** | `k8s/base/`; all pods Running, postgres is a StatefulSet with `volumeClaimTemplates` |
+| T-M7-003 | **Done** | ConfigMap via `configMapGenerator`; `secret.example.yaml` placeholders only, not applied (`AD-064`) |
+| T-M7-004 | **Done** | `docs/evidence/k8s-probes.txt`: postgres down, pods leave endpoints, 0 restarts |
+| T-M7-005 | **Done** | `AD-048` values on every container, incl. the init container; guesses recorded in `AD-048` |
+| T-M7-006 | **Done** | Ingress `civic-station.localhost`: `/` and `/api` both 200 with the `Host` header |
+| T-M7-007 | **Done** | `migrate` init container; fresh cluster came up migrated; choice justified in the notes |
+| T-M7-008 | **Done** | `kubectl get hpa` shows `cpu: 6%/60%` |
+| T-M7-009 | Built | VPA recommender installed, `backend-vpa` in `Off`. Owed: recommendations after a load run (P19/P20) |
+| T-M7-010 | **Done** | `docs/evidence/k8s-rollout.txt`: 444/444 requests 200 during `rollout restart` |
+| T-M7-011 | **Done** | Both overlays build and pass `kubeconform -strict`; 0 `:latest` |
+| T-M7-012 | **Done** | `docs/evidence/k8s-postgres-persistence.txt` |
+| T-M7-013 | Partial | `docs/evidence/rollback-timing.txt`: declarative 36.6–38.8 s (bound 90 s, met); **`rollout undo` 36.1–38.9 s (bound 30 s, missed)**. Re-measure on the prod overlay, or revisit the bound |
+| T-M7-014 | Todo | Notes Q6 |
 
 ## M8 — CI/CD (`09-M8-cicd.md`)
 
@@ -68,7 +83,7 @@ T-M7-001 … T-M7-014: all **Todo**. No `k8s/` directory exists yet.
 | T-M8-002…004 | **Done** | `.github/workflows/ci.yml` on `dev` |
 | T-M8-005 | Built | `build` job; now builds both Dockerfiles and enforces the 60 MB gate |
 | T-M8-006 | Built | `scan` job; both images scan clean locally with Trivy 0.56.2 (`--ignore-unfixed`, HIGH/CRITICAL) |
-| T-M8-007 | Built | `manifests` job skips until `k8s/overlays/prod/kustomization.yaml` exists |
+| T-M8-007 | Built | `manifests` job now validates both overlays with kubeconform (VPA schema from the pinned CRDs catalog) and fails on `:latest`; first CI run on this branch's PR |
 | T-M8-008 | Built | `integration` job; every step it runs was reproduced locally against `compose.yaml` |
 | T-M8-009…011 | Todo | `cd.yml`, `release.yml` |
 | T-M8-012 | Partial | Actions pinned by tag (`@v4`), not by commit SHA |
@@ -99,5 +114,5 @@ T-M9-001 … T-M9-009: all **Todo** (need the cluster).
 | Ollama with no egress (T-M5-009) | Todo — needs `make pull-models` |
 | Ollama numbers for `docs/TRIAGE.md` | Todo |
 | One image, two environments (FR-FE-014) | Todo — needs k3d |
-| Distributed limiter (T-M4-010, T-M9-008) | Todo — needs k3d |
+| Distributed limiter (T-M4-010, T-M9-008) | Todo — cluster exists now; needs 4 replicas + 30 POSTs |
 | Screenshots through nginx (optional) | Todo |

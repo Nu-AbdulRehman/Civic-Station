@@ -77,3 +77,58 @@ mount and no `build:` key. A bind mount replaces the image's contents with whate
 host, which is exactly what you want while iterating and exactly what destroys
 build-once-deploy-many in production: the image that was tested is no longer the code that
 runs. Production runs the SHA-tagged image and nothing else (`AD-062`).
+
+---
+
+## Kubernetes manifests (`FR-K8S-001…014`, T-M7-001…013)
+
+Layout is `k8s/base/` plus `k8s/overlays/{dev,prod}` (`AD-011`). The namespace is `civic-station`,
+the RFC 1123 form of the product name: the brief's `Civic-Station` is rejected by Kubernetes
+(`AD-030`). `scripts/k3d-up.sh` builds a local cluster (1 server, 2 agents) with k3s's bundled
+Traefik and metrics-server, installs the VPA recommender, creates the Secret once, imports the
+`:dev` images and applies the dev overlay.
+
+**Why PostgreSQL is a StatefulSet.** `k8s/base/postgres.yaml` uses `volumeClaimTemplates`, so the
+pod is `postgres-0` with its own claim `pgdata-postgres-0`. When that pod is deleted or
+rescheduled, its replacement has the same name and reattaches the same claim. A Deployment's pods
+are interchangeable, with random names; with a shared claim, two pods during a rollout can
+point at one data directory, and with no claim a rescheduled pod starts empty.
+`docs/evidence/k8s-postgres-persistence.txt` shows a pod deleted, a new pod UID, and the same
+rows afterwards.
+
+**Why migrations run as an init container.** An init container cannot be forgotten: no backend
+pod starts until `alembic upgrade head` exits 0. A pre-rollout Job would need its own ordering
+mechanism. The cost is one migration attempt per pod, which is safe because Alembic serialises on
+its version table and a second run is a no-op. The consequence is that old pods keep serving
+against the new schema during a rollout, so every revision must be expand-then-contract
+(`08-M7` §2.1). The seed does not run on the cluster: fixture complaints are demo data, not
+production data. For a demo, run `kubectl exec -n civic-station deploy/backend -- python -m
+seeds.complaints`.
+
+**Probes mean different things.** Backend liveness and startup use `/health`, which touches no
+dependency; readiness uses `/ready`, which checks the database and the cache.
+`docs/evidence/k8s-probes.txt` shows the whole argument in one run: with PostgreSQL scaled to
+zero, both backend pods go `0/1`, the Service has no endpoints, and `/ready` returns 503 naming
+the database, while the restart count stays at 0. With liveness on `/ready`, the same outage
+would have restarted every backend pod in a loop.
+
+**Service links are off.** Both Deployments set `enableServiceLinks: false`. Without it, the
+Service named `backend` injects `BACKEND_PORT=tcp://…` into every pod, which the settings
+object rejects (`docs/failure-log.md`, 2026-09-28).
+
+**Secrets.** `k8s/base/secret.example.yaml` documents the Secret with placeholders and is
+deliberately not a Kustomize resource, so `kubectl apply -k` can never overwrite the real one
+(`AD-064`). `DATABASE_URL` is assembled in the pod from `$(POSTGRES_PASSWORD)`, so the password
+must be URL-safe; the setup script generates hex.
+
+**Rolling update and rollback.** `maxSurge: 1`, `maxUnavailable: 0`, a 5 s `preStop` sleep and a
+30 s grace period. During `kubectl rollout restart`, 444 of 444 requests through the Ingress
+returned 200 (`docs/evidence/k8s-rollout.txt`). Rollback timings are in
+`docs/evidence/rollback-timing.txt`: the declarative re-apply took 36.6–38.8 s against its 90 s
+bound, but **`kubectl rollout undo` took 36.1–38.9 s, which misses ADR-0003's 30 s bound.** Both
+paths do the same work, because an undo is also a rolling update: two pods replaced one at a
+time, each running the migrate init container, starting uvicorn, and passing readiness, while
+each old pod waits out its `preStop` sleep. The measurement was on the dev overlay, where the
+backend CPU limit is halved to 250m, which slows the Python start. It has not yet been repeated
+on the prod overlay. The levers are a faster start (prod limits) or a looser bound. `maxSurge`
+is fixed by the design, and raising it would trade capacity headroom for rollback speed.

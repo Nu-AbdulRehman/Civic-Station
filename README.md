@@ -30,6 +30,24 @@ TRIAGE_PROVIDER=ollama docker compose --profile ollama up -d --wait
 `compose.prod.yaml`, which runs SHA-tagged images only: `IMAGE_TAG=<sha> docker compose -f
 compose.prod.yaml up -d --wait`.
 
+## Kubernetes (local k3d)
+
+Needs Docker, [`k3d`](https://k3d.io) and `kubectl`. One script creates the cluster, installs the
+VPA recommender, creates the `app-secrets` Secret once, builds and imports the `:dev` images, and
+applies the dev overlay:
+
+```sh
+sh scripts/k3d-up.sh
+curl -H 'Host: civic-station.localhost' http://127.0.0.1:8081/api/version
+```
+
+The browser can open <http://civic-station.localhost:8081>. Manifests are under `k8s/`:
+`base/` plus `overlays/dev` (simulated provider) and `overlays/prod` (Groq, image tags set to the
+commit SHA by the pipeline). The committed `k8s/base/secret.example.yaml` holds placeholders
+only and is never applied. To use Groq on the cluster, create the Secret with a real key before
+running the script, as `secret.example.yaml` shows. `k3d cluster delete civic-station` removes
+everything.
+
 ## Database migrations and seed
 
 The schema is created only by Alembic, never at application startup (`BR-DATA-001`). Both

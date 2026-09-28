@@ -1,0 +1,17 @@
+# One host (AD-029). /api goes straight to the backend, never through the frontend's nginx:
+# two proxies would make every client the Ingress address to the rate limiter (AD-054).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: civic-station
+spec:
+  rules:
+    - host: civic-station.localhost
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend: { service: { name: backend, port: { name: http } } }
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: frontend, port: { name: http } } }

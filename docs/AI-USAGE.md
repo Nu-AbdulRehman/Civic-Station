@@ -149,6 +149,9 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   stacked-branch chain and its merge rules (in order, merge commits only, CI first), the CI command
   set, image/Compose/k8s facts about the application, Dev 1 checks that need Dev 2's services,
   decisions to review, and gotchas. Files: `docs/handover/handoff.md`.
+- 2026-09-28 · feat/T-M7-002-k8s-manifests · P11–P15 (T-M7-001…012, T-M9-002, T-M4-008 k8s part):
+  `k8s/base` + dev/prod overlays, `scripts/k3d-up.sh`, kubeconform in the CI `manifests` job, probe /
+  persistence / rollout / rollback evidence, AD-064, notes, README, `DEV2-STATUS.md`.
 
 ## Skill invocations
 
@@ -354,3 +357,31 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   the `PLACEHOLDER_` prefix rather than flag — carried to T-M8-014; (4) an existing `.env` without
   `POSTGRES_*` makes `make up` stop with `POSTGRES_USER: set in .env` — intended, loud failure.
 - **I changed:** fixed (1); (2) and (3) documented, (4) accepted.
+
+### 2026-09-28 · feat/T-M7-002-k8s-manifests
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for P11–P15 from `08-M7-kubernetes.md` §10 (12 items, each
+  tagged T-M7-nnn).
+- **I changed:** Dropped the "install metrics-server" step after finding that k3s bundles it; the
+  task became "verify `kubectl top nodes`".
+
+### 2026-09-28 · feat/T-M7-002-k8s-manifests
+- **Tool:** Claude Code + `ponytail`
+- **Shaped / Wrote:** Decision record for keeping the placeholder Secret out of every
+  kustomization, recorded as `AD-064`.
+- **I changed:** accepted as-is.
+
+### 2026-09-28 · feat/T-M7-002-k8s-manifests
+- **Tool:** Claude Code, diff self-review (the installed `grilling` skill questions a person, not a
+  diff; the same process gap as the previous branch)
+- **Shaped / Wrote:** Findings: (1) `k8s/base/backend.yaml` pods crash-looped because Service links
+  injected `BACKEND_PORT=tcp://…` — fixed with `enableServiceLinks: false`; (2) `k8s/base/backend.yaml`
+  builds `DATABASE_URL` by substitution, so a password with `@`, `/` or `:` breaks the URL — the
+  setup script generates hex, and `cd.yml` (T-M8-010) must do the same; (3) `kubectl rollout undo`
+  leaves apply's last-applied annotation stale, so the next apply of that state is a no-op — the
+  runbook (T-M10-005) must require a re-apply after every undo; (4) `rollout undo` takes 36–39 s
+  against ADR-0003's 30 s bound — measured and reported, not fixed; (5) `k8s/base/redis.yaml` uses
+  `Recreate`, so Redis is briefly down on every Redis rollout — accepted, because the limiter fails
+  open and stats return `MISS` (`BR-CACHE-007`).
+- **I changed:** fixed (1); (2), (3) carried to T-M8-010 and T-M10-005; (4) reported in the notes
+  and the status file; (5) accepted.

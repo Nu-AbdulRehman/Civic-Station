@@ -1,0 +1,15 @@
+# Postgres persistence across pod deletion (T-M7-012, FR-DATA-005). Captured 2026-09-27T19:14:08Z on k3d.
+$ kubectl get pvc
+NAME                STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+pgdata-postgres-0   Bound    pvc-38e04ccf-ac09-44b2-8df7-372d837a2f86   1Gi        RWO            local-path     <unset>                 8m39s
+redisdata           Bound    pvc-3ae9d0a3-f05e-4c51-af9f-8e1b3560959e   1Gi        RWO            local-path     <unset>                 8m40s
+$ select count(*), max(created_at) from complaints   # before
+1|2026-09-27 19:13:28.766277+00
+$ kubectl get pod postgres-0 -o uid
+5de7f494-4dff-4a5b-9821-a224a34993f9
+$ kubectl delete pod postgres-0
+pod "postgres-0" deleted from civic-station namespace
+$ kubectl get pod postgres-0 -o uid   # a new pod
+636a527c-14f8-432a-a1ee-7b401701ecdd
+$ select count(*), max(created_at) from complaints   # after: same rows
+1|2026-09-27 19:13:28.766277+00

@@ -1,0 +1,32 @@
+# Probe demonstration (T-M7-004, FR-K8S-006, NFR-REL-004). Captured 2026-09-27T19:13:39Z on k3d.
+$ kubectl get pods -l app=backend   # before
+NAME                       READY   STATUS    RESTARTS   AGE
+backend-696fb8d5b9-ftxg7   1/1     Running   0          40s
+backend-696fb8d5b9-xc6gw   1/1     Running   0          57s
+$ kubectl get endpoints backend       # before
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME      ENDPOINTS                        AGE
+backend   10.42.1.10:8000,10.42.2.7:8000   8m11s
+$ kubectl scale statefulset/postgres --replicas=0
+statefulset.apps/postgres scaled
+$ kubectl get pods -l app=backend   # database down: not ready, restarts unchanged
+NAME                       READY   STATUS    RESTARTS   AGE
+backend-696fb8d5b9-ftxg7   0/1     Running   0          50s
+backend-696fb8d5b9-xc6gw   0/1     Running   0          67s
+$ kubectl get endpoints backend       # database down: no ready endpoints
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME      ENDPOINTS   AGE
+backend               8m20s
+$ curl /api/ready via backend pod
+Defaulted container "backend" out of: backend, migrate (init)
+503 {"error":{"code":"dependency_unavailable","message":"database unreachable"},"request_id":"93881da9-6e11-4144-ab67-b8b28267f19d","checks":{"database":"fail","cache":"ok"}}
+$ kubectl scale statefulset/postgres --replicas=1
+statefulset.apps/postgres scaled
+$ kubectl get pods -l app=backend   # after: ready again, still 0 restarts
+NAME                       READY   STATUS    RESTARTS   AGE
+backend-696fb8d5b9-ftxg7   1/1     Running   0          60s
+backend-696fb8d5b9-xc6gw   1/1     Running   0          77s
+$ kubectl get endpoints backend
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME      ENDPOINTS                        AGE
+backend   10.42.1.10:8000,10.42.2.7:8000   8m31s

@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2 # the HPA owns this from here on (minReplicas: 2)
+  strategy:
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 } # capacity never dips (FR-K8S-011)
+  selector:
+    matchLabels: { app: backend }
+  template:
+    metadata:
+      labels: { app: backend }
+    spec:
+      # Off: a Service named `backend` would inject BACKEND_PORT=tcp://..., which the settings
+      # object rejects as an integer (docs/failure-log.md 2026-09-28).
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 30 # 5 s preStop + 25 s uvicorn drain (BR-OPS-004)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      # Schema only, never from app startup (BR-DATA-001). Runs before every pod; Alembic's
+      # version-table lock makes concurrent runs safe. Revisions must be expand-then-contract,
+      # because old pods keep serving against the new schema during a rollout (08-M7 §2.1).
+      initContainers:
+        - name: migrate
+          image: civic-station-backend
+          command: ["alembic", "upgrade", "head"]
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { configMapKeyRef: { name: app-config, key: POSTGRES_USER } }
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: app-config, key: POSTGRES_DB } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: POSTGRES_PASSWORD } }
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+      containers:
+        - name: backend
+          image: civic-station-backend
+          ports: [{ name: http, containerPort: 8000 }]
+          envFrom:
+            - configMapRef: { name: app-config }
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { configMapKeyRef: { name: app-config, key: POSTGRES_USER } }
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: app-config, key: POSTGRES_DB } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: POSTGRES_PASSWORD } }
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)
+            - name: GROQ_API_KEY # absent unless TRIAGE_PROVIDER=llm needs it
+              valueFrom: { secretKeyRef: { name: app-secrets, key: GROQ_API_KEY, optional: true } }
+          securityContext: *container-security
+          # Liveness depends on the process only; readiness on DB + cache (BR-OPS-001, 08-M7 §3).
+          startupProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 2
+            failureThreshold: 30
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet: { path: /ready, port: http }
+            periodSeconds: 5
+            failureThreshold: 2
+            timeoutSeconds: 2
+          lifecycle:
+            # Lets endpoint removal propagate before SIGTERM starts the drain (08-M7 §5).
+            preStop: { exec: { command: ["sh", "-c", "sleep 5"] } }
+          resources: # AD-048 guess; the VPA loop corrects it (FR-LOAD-003)
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  type: ClusterIP
+  selector: { app: backend }
+  ports: [{ name: http, port: 8000, targetPort: http }]

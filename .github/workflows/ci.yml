@@ -201,7 +201,13 @@ jobs:
         run: |
           curl -fsSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
             | tar -xz kubeconform
-          kubectl kustomize k8s/overlays/prod | ./kubeconform -strict -summary
+          # The VPA is a CRD; its schema comes from the CRDs catalog, pinned to a commit.
+          for overlay in dev prod; do
+            kubectl kustomize "k8s/overlays/$overlay" | ./kubeconform -strict -summary \
+              -schema-location default \
+              -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/ad3b08c5045129d7bb1eeffd8e61719b2c8dd1e2/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+          done
+          test "$(kubectl kustomize k8s/overlays/prod | grep -c ':latest')" -eq 0
 
   integration:
     runs-on: ubuntu-24.04
