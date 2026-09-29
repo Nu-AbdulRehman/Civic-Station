@@ -178,6 +178,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   `feat/T-M11-005-header-tagline` edits the same `<h1>` in `frontend/src/App.tsx`; conflict resolved by
   keeping logo and tagline; fixed a duplicated product name in the first resolution; evidence in
   `docs/evidence/merge-conflict.md`.
+- 2026-09-29 · docs/T-M10-docs-readme-notes-runbook · T-M10-003/005/009/013, T-M11-003, T-M6-012,
+  T-M8-015, T-M7-014: README rewritten (problem statement, badges, architecture, deployment,
+  package and activity diagrams, status state diagram, API table, both-theme screenshots); the eight
+  §5.2 answers in `ENGINEERING-NOTES.md`; `RUNBOOK.md`; `INCIDENTS.md`; `CONTRIBUTING.md`;
+  `LICENSE`; `docs/evidence/README.md` index; ADR-0003's stale build-argument lines corrected.
 
 ## Skill invocations
 
@@ -469,3 +474,14 @@ One entry per skill run (`CLAUDE.md` §6 rule 3).
   to 3.12; (6) `load/k6-script.js` idle stage is dropped by k6 v2 — WONTFIX, the watcher covers the
   scale-down window.
 - **I changed:** fixed (2)–(5); (1) is the verification; (6) documented in `docs/failure-log.md`.
+
+### 2026-09-29 · docs/T-M10-docs-readme-notes-runbook
+- **Tool:** Claude Code + `caveman`
+- **Shaped / Wrote:** Stripped task list for the documentation phase from `11-M10-documentation.md`
+  and the rubric's J line: README, notes Q1-Q8, runbook, incidents, contributing, licence, evidence
+  index, ADR review.
+- **I changed:** The Mermaid diagrams were rendered with mermaid-cli before committing; one node id
+  (`call`) is a reserved word and broke the activity diagram, renamed. The README's injection claim
+  was narrowed to what `docs/TRIAGE.md` §8 actually shows. Q5 (HPA lag) is Dev 1's answer by the
+  schedule; drafted here from the committed CSVs for Dev 1 to review and own. Q2 names the rung in
+  generic terms; the lecture slide's own wording was not available and should be checked.

@@ -1,7 +1,191 @@
 # Engineering notes
 
-The eight §5.2 answers are assembled here by T-M10-006. Sections are added as their owning
-tasks complete; every claim cites a file and line in this repository.
+The eight §5.2 answers come first; the topic sections after them hold the longer measurements
+they cite. Every claim names a file and line in this repository, or a file under
+`docs/evidence/` that a reader can open. Line numbers are as of the commit that adds this section.
+
+---
+
+## The eight questions (§5.2)
+
+### Q1. Three things that differ between a laptop and a CI runner, and the line that freezes each
+
+1. **The Python interpreter.** This laptop is Windows with Python 3.14 on the `PATH`; the runner
+   is `ubuntu-24.04` (`.github/workflows/ci.yml:22`). The difference bit us for real: `uv` picked
+   3.14 for `scripts/plot_scaling.py`, found no matplotlib wheel for it, and hung on a source build
+   (`docs/failure-log.md`, 2026-09-28). The image does not care what the host has:
+   `backend/Dockerfile:8` and `:16` pin `FROM python:3.12.14-slim-bookworm`, and `backend/uv.lock:3`
+   pins `requires-python = "==3.12.*"`.
+2. **Dependency versions.** A laptop accumulates whatever was last installed. The image installs
+   exactly the lock file, or fails: `backend/Dockerfile:14` runs `uv sync --frozen`, and
+   `frontend/Dockerfile:9` runs `npm ci`, which refuses a `package-lock.json` that disagrees with
+   `package.json`.
+3. **Configuration and credentials.** The laptop has a `.env` with a real `GROQ_API_KEY`; CI has
+   no key and must give the same answer every run. `.github/workflows/ci.yml:111` sets
+   `TRIAGE_PROVIDER: simulated` for the integration tests, and the service containers are pinned at
+   `.github/workflows/ci.yml:70` (`postgres:16.4-alpine`) and `:79` (`redis:7.4-alpine`), so a test
+   never depends on what happens to be running on the host.
+
+A fourth, found late: **CPU count.** Docker on this laptop sees 12 CPUs, a hosted runner 4.
+Resource limits in `compose.yaml` (every service's `deploy.resources`) make the stack behave the
+same on both. They are also how a too-tight Ollama limit made every triage time out until it was
+raised (`compose.yaml`, `ollama` service; `docs/failure-log.md`, 2026-09-29).
+
+### Q2. Where the pipeline sits on the CI/CD maturity ladder, and the next rung
+
+**Continuous deployment to a disposable environment, with automated verification and rollback.**
+Every pull request runs eight required checks (`.github/workflows/ci.yml`: lint and types, both
+test suites, image build, Trivy scan, kubeconform, a Compose integration run, and
+`check_submission.py`). Every merge to `main` re-runs them, publishes both images to GHCR by commit
+SHA, deploys that SHA to a Kubernetes cluster created inside the runner, smoke-tests it through the
+Ingress, and rolls back automatically if the smoke test fails (`.github/workflows/cd.yml`,
+`AD-065`; `docs/evidence/cd-forced-rollback.png`). Nothing is deployed by hand.
+
+It is not the top rung, for two reasons that can be stated exactly. The cluster is thrown away at
+the end of the job, so no long-lived environment ever runs the SHA; and images are scanned but not
+signed (ADR-0003, `docs/NON-GOALS.md` §5).
+
+**The next rung is GitOps continuous deployment to a persistent cluster:** Argo CD or Flux
+watching `k8s/overlays/prod`, with the pipeline only committing the new SHA. What it buys: the
+cluster converges on the repository by itself, drift is detected and reverted, and a rollback is a
+`git revert` whose history is the audit log. Deploying by digest with Cosign verification would
+close the signing gap at the same time.
+
+### Q3. The line that guarantees build-once-deploy-many, and what breaks without it
+
+`frontend/entrypoint.sh:21`:
+
+```sh
+envsubst '${BACKEND_ORIGIN}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf
+```
+
+The backend's address enters the frontend when the container **starts**, not when the image is
+built. The same image digest runs in Compose and on the cluster; only the environment differs
+(`docs/evidence/one-image-two-environments.txt` shows one config digest in both places, and the
+rendered `proxy_pass` changing with `BACKEND_ORIGIN`). The backend's counterpart is `APP_VERSION`,
+read from the environment at runtime and deliberately not a build argument
+(`backend/Dockerfile:3`, `AD-014`).
+
+Without it, Vite would bake an API URL into the JavaScript at build time. Every environment would
+need its own build, the image tested in CI would not be the image deployed, and rolling back to the
+previous image would stop being a meaningful operation, because that image might point at the
+wrong backend.
+
+### Q4. What "correct" means for a probabilistic component, and how CI stays deterministic
+
+Whether the model's answer is right cannot be checked by a test; everything around it can. For
+this system, correct means:
+
+- **Well-formed or rejected.** Every provider's output is parsed into `TriageResult`
+  (`backend/app/domain/models.py:30`): a category and a priority from the closed enums, and a
+  summary of bounded length. The pipeline validates again whatever a provider returns
+  (`backend/app/providers/triage/pipeline.py:147`, `AD-060`). Malformed output is never repaired;
+  it goes to the rules fallback.
+- **Always answered.** A valid complaint gets a `201` whatever the provider does. Timeout, 429,
+  5xx, bad JSON and injection attempts all end in the rules classifier with
+  `triaged_by = "rules:fallback"` (`backend/app/providers/triage/pipeline.py:78`). Here correctness
+  is a property of the system, not of the model.
+- **Measured, not assumed.** Agreement between providers and the fallback rate are measured
+  offline and reported with dates (`docs/TRIAGE.md` §5–§7).
+
+CI is deterministic because it never calls a model. `.github/workflows/ci.yml:111` selects
+`SimulatedTriage`, whose output is a pure function of its input: it seeds a random generator from a
+SHA-256 of the text (`backend/app/providers/triage/simulated.py:34`), because Python's `hash()` is
+salted per process. Its failure modes (`raise`, `malformed`, `slow`) let the tests drive every
+fallback path on demand, with no network and no real clock.
+
+### Q5. HPA lag: how many seconds, where the time went, and what would reduce it
+
+**34 seconds from offered load rising to the HPA asking for more replicas, and 44 seconds until
+the new pods were Ready to serve** (run 1, CPU request 100m). Both numbers come from two committed
+files: `docs/evidence/run1-k6-timeseries.csv` (k6 starts at t = 1 s and reaches 40 virtual users at
+t = 61 s) and `docs/evidence/run1-scaling.csv` (5-second samples of the HPA and the Deployment).
+`uv run scripts/plot_scaling.py --from-csv docs/evidence/run1-k6-timeseries.csv
+docs/evidence/run1-scaling.csv <prefix>` recomputes them. After the VPA-guided request change
+(run 2, 182m), the same load gave 50 s and 78 s.
+
+| Stage | Seconds | Evidence |
+|---|---|---|
+| Load arrives and CPU rises, but no metric shows it yet | ~34 | The first sample with CPU above the 60 % target (176 %) is at t = 35 s, and desired replicas rose in that same sample |
+| Scheduling, container start, the migrate init container, the startup probe | ~10 | Current and Ready replicas rise at t = 45 s |
+| Reaching full capacity (10 Ready pods) | +111 | t = 156 s |
+
+The first stage is the metrics pipeline. metrics-server samples usage on an interval, the HPA
+controller evaluates on its own period (15 s by default), and usage is averaged, so a step change
+takes two or three cycles to become a decision. The chart (`docs/evidence/run1-replicas-vs-load.png`)
+shows the second stage as the gap between the red (desired) and green (Ready) lines: a pod counts as
+a replica before it can serve.
+
+What would reduce it: a shorter metrics-server resolution and HPA sync period, at the cost of more
+API-server load; a faster pod start, for example running migrations once as a pre-rollout Job
+instead of in every pod's init container (`k8s/base/backend.yaml`, the `migrate` init container;
+`08-M7` §2.1); and, for load that can be predicted, a higher `minReplicas`, so the capacity is
+already there. Only the last one removes the lag rather than shortening it.
+
+### Q6. Why the VPA is in `Off` mode
+
+`k8s/base/vpa.yaml:9` sets `updateMode: "Off"`: the VPA recommends and a person decides.
+
+The HPA scales on CPU utilisation, which is usage divided by the CPU request
+(`k8s/base/hpa.yaml:14`, target 60 %). In `Auto` mode the VPA changes that same request, by evicting
+and recreating pods, so the two controllers act on one signal. Under load the VPA raises the
+request; the HPA's computed utilisation falls; the HPA scales in; per-pod usage rises; the VPA
+raises the request again. Every eviction also removes capacity during the very load that caused it.
+
+This repository shows the coupling directly. After run 1 the VPA recommended 182m against the 100m
+guess (`docs/evidence/vpa-recommendation.txt`), and the request was changed by hand
+(`k8s/base/backend.yaml:85`, in a commit of its own). Run 2 offered the same load. Utilisation under
+load fell from 120–220 % of the request to 70–130 %, and the HPA scaled later and in smaller steps:
+first rise at 50 s instead of 34 s, desired replicas 2 → 4 → 5 → 6 → 7 → 10 instead of
+2 → 6 → 8 → 10. One request change, made deliberately, visibly changed the HPA's behaviour. In
+`Auto` mode that change would happen continuously and unobserved, in the middle of the load.
+
+### Q7. `internal: true` blocks outbound traffic: where does that leave the LLM call?
+
+`compose.yaml:160` makes the `internal` network egress-free, and PostgreSQL, Redis and Ollama sit
+only on it (`compose.yaml:81`, `:98`, `:116`). The backend must still reach Groq, so it is the only
+service on three networks (`compose.yaml:48`): `edge` to the frontend, `internal` to the data
+services, and a separate `egress` bridge (`compose.yaml:161`) for outbound calls (`AD-002`,
+ADR-0005).
+
+Putting egress on `edge` would also have worked, since `edge` is an ordinary bridge. But then the
+backend's ability to call the internet would be a side effect of the network the browser traffic
+uses. A network named `egress` states the intent, for six lines of YAML.
+
+Ollama has no egress at all, so it cannot download its own model. The weights arrive once, through
+a throwaway container on `egress` that writes into the `ollama_models` volume
+(`compose.yaml:152`, `make pull-models`, `AD-046`). `docs/evidence/ollama-offline.txt` shows an
+outbound attempt from the Ollama container failing with `Network is unreachable` while triage
+through it succeeds. On Kubernetes there is no `NetworkPolicy`, so this segmentation does not carry
+over (`docs/NON-GOALS.md` §2).
+
+### Q8. The failure
+
+**Symptom.** With `TRIAGE_PROVIDER=ollama`, the Ollama container healthy, and `/api/version`
+reporting `llm:ollama`, every complaint still came back `triaged_by: rules:fallback`. The backend
+logged `triage.retry` and then `triage.fallback`, both with `error_class: Timeout`. It spanned two
+working sessions.
+
+**What we wrongly believed first.** That the model was still loading. On the first day one
+complaint in three succeeded, at about 20 s, which looked like a cold model warming up, and that
+explanation was written into `docs/evidence/ollama-offline.txt`.
+
+**What told us the truth.** Two commands. `docker exec civic-station-ollama-1 ollama ps` showed the
+model fully loaded (`100% CPU`), so it was not loading. Then a timed request from the backend
+container straight to `http://ollama:11434/api/chat`, reading Ollama's own counters:
+
+```
+call 1: 9.7s  prompt_eval 272 tok in 2.0s, gen 38 tok in 7.4s, load 0.0s
+```
+
+Thirty-eight tokens in 7.4 seconds is about five tokens a second, against a 10-second
+`TRIAGE_TIMEOUT_SECONDS`, and `load 0.0s` ruled out loading on the spot. `docker stats` showed
+Ollama pinned at 118 % CPU: `compose.yaml` capped the service at `cpus: "2.0"` on a 12-CPU machine.
+`docker update --cpus 4` brought a call down to 3.5 s. The limit is now 4 (`compose.yaml`, `ollama`
+service), and four complaints in a row were triaged by `llm:ollama` in about 4 s. The lesson: read
+the provider's own timing before theorising about it. Full entry: `docs/failure-log.md`,
+2026-09-29. A second failure found by measurement, the rate limiter split per node by kube-proxy
+SNAT, is in the same log (2026-09-28, `AD-068`).
 
 ---
 
@@ -124,11 +308,11 @@ must be URL-safe; the setup script generates hex.
 **Rolling update and rollback.** `maxSurge: 1`, `maxUnavailable: 0`, a 5 s `preStop` sleep and a
 30 s grace period. During `kubectl rollout restart`, 444 of 444 requests through the Ingress
 returned 200 (`docs/evidence/k8s-rollout.txt`). Rollback timings are in
-`docs/evidence/rollback-timing.txt`: the declarative re-apply took 36.6–38.8 s against its 90 s
-bound, but **`kubectl rollout undo` took 36.1–38.9 s, which misses ADR-0003's 30 s bound.** Both
-paths do the same work, because an undo is also a rolling update: two pods replaced one at a
-time, each running the migrate init container, starting uvicorn, and passing readiness, while
-each old pod waits out its `preStop` sleep. The measurement was on the dev overlay, where the
-backend CPU limit is halved to 250m, which slows the Python start. It has not yet been repeated
-on the prod overlay. The levers are a faster start (prod limits) or a looser bound. `maxSurge`
-is fixed by the design, and raising it would trade capacity headroom for rollback speed.
+`docs/evidence/rollback-timing-prod-limits.txt`: with the backend at its production CPU limit
+(500m), `kubectl rollout undo` took 22.3–24.5 s against ADR-0003's 30 s bound, and the
+declarative re-apply 22.5–25.2 s against its 90 s bound. Both paths do the same work, because an
+undo is also a rolling update: two pods replaced one at a time, each running the migrate init
+container, starting uvicorn and passing readiness, while each old pod waits out its `preStop`
+sleep. The first measurement, on the dev overlay, took 36–39 s and missed the 30 s bound
+(`docs/evidence/rollback-timing.txt`). The only difference was the dev overlay's halved CPU limit
+(250m), which slows the Python start; the bound holds at the limit production actually runs.

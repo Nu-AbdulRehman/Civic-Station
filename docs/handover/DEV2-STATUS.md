@@ -19,7 +19,7 @@ the repository (GitHub settings); confirm by hand.
 | P4 Compose | T-M6-004/005/006 | **Done** |
 | P5 prod Compose, env hygiene | T-M6-007/008/009 | **Done** — clean clone reaches a seeded stack; history secret scan clean |
 | P6 CI lint + tests | T-M8-002/003/004 | **Done** (on `dev`) |
-| P7 red/green evidence | T-M8-013 | Todo |
+| P7 red/green evidence | T-M8-013 | **Done** — `blocked-merge-{red,green}.png` |
 | P8 CI build/scan/manifests | T-M8-005/006/007 | Built — `build`/`scan` now have Dockerfiles to act on; `manifests` waits for `k8s/` |
 | P9 Ollama + volume notes | T-M6-010/011 | **Done** |
 | P10 CI integration | T-M8-008 | Built — first real run happens on this branch's PR |
@@ -28,8 +28,8 @@ the repository (GitHub settings); confirm by hand.
 | P19–P21 load, VPA, demos | T-M9-001…008, T-M7-012/013, T-M3-009, T-M4-008 (k8s part)/009/010 | **Done**, except the write-ups (T-M9-005 lag = Dev 1, T-M9-007 / notes Q6) |
 | P22 check_submission §5.3 | T-M8-014 | **Done** — 9 checks, 0 findings; each detector has a planted-violation test that goes red with the detector disabled |
 | P23 zero-downtime | T-M9-009 | **Done** — 13,456 requests, 0 failed |
-| P24 runbook + notes | T-M10-005, T-M6-012, T-M8-015, T-M7-014 | Todo |
-| P25 evidence audit | T-M10-009 | Todo |
+| P24 runbook + notes | T-M10-005, T-M6-012, T-M8-015, T-M7-014 | **Done** — `docs/RUNBOOK.md`; all eight §5.2 answers in `ENGINEERING-NOTES.md` (Q5 drafted for Dev 1) |
+| P25 evidence audit | T-M10-009 | **Done** — `docs/evidence/README.md` maps every rubric line to its file |
 
 ## M6 — containers (`07-M6-containers.md`)
 
@@ -46,7 +46,7 @@ the repository (GitHub settings); confirm by hand.
 | T-M6-009 | **Done** | `docs/evidence/clean-clone-quickstart.txt` (warm Docker cache caveat stated there) |
 | T-M6-010 | **Done** | `docs/evidence/ollama-offline.txt`: empty volume → named healthcheck failure; `make pull-models` 554 s, re-run no-op 3 s; `llm:ollama` triage with no route out (~20 s on CPU) |
 | T-M6-011 | **Done** | `ENGINEERING-NOTES.md` "Images, volumes and bind mounts" |
-| T-M6-012 | Todo | Notes Q1 and Q7 |
+| T-M6-012 | **Done** | Notes Q1 and Q7 |
 
 ## M4 — cache (Dev 2 rows, `05-M4-cache.md`)
 
@@ -74,7 +74,7 @@ the repository (GitHub settings); confirm by hand.
 | T-M7-011 | **Done** | Both overlays build and pass `kubeconform -strict`; 0 `:latest` |
 | T-M7-012 | **Done** | `docs/evidence/k8s-postgres-persistence.txt` |
 | T-M7-013 | **Done** | Prod limits: undo 22.3–24.5 s (bound 30 s), re-apply 22.5–25.2 s (`rollback-timing-prod-limits.txt`). The dev overlay's halved CPU limit gave 36–39 s (`rollback-timing.txt`) |
-| T-M7-014 | Todo | Notes Q6 |
+| T-M7-014 | **Done** | Notes Q6 |
 
 ## M8 — CI/CD (`09-M8-cicd.md`)
 
