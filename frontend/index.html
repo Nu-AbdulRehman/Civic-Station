@@ -3,7 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Civic-Station: report a civic complaint, have it triaged, and track it to resolution."
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Civic-Station</title>
+    <script>
+      // Set the theme before first paint, so a dark reload never flashes light. A saved choice
+      // wins; otherwise follow the OS. Storage can throw (privacy modes), so it is guarded.
+      (function () {
+        var theme = "light";
+        try {
+          theme =
+            localStorage.getItem("theme") ||
+            (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        } catch (e) {}
+        document.documentElement.dataset.theme = theme;
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", theme === "dark" ? "#172230" : "#ffffff");
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
