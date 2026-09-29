@@ -126,7 +126,10 @@ services:
     restart: unless-stopped
     deploy:
       resources:
-        limits: { cpus: "2.0", memory: 3G }
+        # CPU inference speed scales with this cap: at 2 CPUs a triage took 8-12 s against the 10 s
+        # TRIAGE_TIMEOUT_SECONDS, so every call fell back to rules; at 4 it takes ~3.5 s.
+        # Above the host's CPU count Docker refuses to start the container.
+        limits: { cpus: "4.0", memory: 3G }
         reservations: { cpus: "0.5", memory: 1G }
 
   # Throwaway puller on egress, used only by `make pull-models`. No-op when the model is present.

@@ -36,3 +36,6 @@ $ POST /api/complaints (#2, model warm)
 $ POST /api/complaints (#3, model warm)
 {'category': 'streetlights', 'priority': 'normal', 'triaged_by': 'llm:ollama', 'triage_latency_ms': 20276}
 # Latency ~20 s: CPU-only inference exceeds the first 10 s TRIAGE_TIMEOUT_SECONDS and the one retry answers (AD-007), close to the 21 s worst case.
+
+# Follow-up 2026-09-29: the ~20 s above was caused by compose.yaml capping Ollama at 2 CPUs. At the
+# corrected cap of 4 CPUs, four complaints in a row were llm:ollama at 3.9-4.3 s (docs/failure-log.md).
