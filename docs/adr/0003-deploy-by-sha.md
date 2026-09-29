@@ -20,7 +20,7 @@ The pipeline also publishes artefacts, and publishing from unverified code is ho
 - `cd.yml` builds and pushes both images tagged `${{ github.sha }}` **and** `latest`, in a job gated by `needs: test`.
 - The `deploy-k8s` job is gated by `needs: build-push` and applies `overlays/prod` with the image tag set to the same SHA, via a Kustomize image transformer.
 - The build job captures the image **digest** as a job output, so the digest is recorded in the run even though the SHA tag is what is deployed.
-- `GET /api/version` returns the commit SHA, passed in as a Docker build argument, so the running system can be asked directly rather than inferred from a manifest.
+- `GET /api/version` returns the commit SHA, read from the `APP_VERSION` environment variable that the deploy sets at runtime (`AD-014`), so the running system can be asked directly rather than inferred from a manifest.
 - Registry authentication uses `GITHUB_TOKEN` with `packages: write` — a scoped, revocable token, never an account password — under a least-privilege `permissions:` block.
 
 **Rollback has two documented mechanisms**, and the distinction matters:
@@ -56,4 +56,4 @@ Both figures are measured and captured to `docs/evidence/rollback-timing.txt` (`
 **Costs.**
 - Every deployment is a new manifest value, so the deployed tag must be injected by the pipeline rather than committed. The committed overlay therefore contains a placeholder tag, and a human running `kubectl apply` by hand must supply the SHA — documented in the runbook.
 - The registry accumulates one image per commit to `main`. Acceptable at this scale; a retention policy is a real concern at production scale and is noted as such rather than implemented.
-- The commit SHA is baked into the image as a build argument. This is the one thing that is legitimately environment-independent-but-build-time, and the engineering notes explain why it does not violate build-once-deploy-many: the SHA identifies the artefact, it does not configure it.
+- The commit SHA is supplied to the container at deploy time (`APP_VERSION`, merged into the ConfigMap by `scripts/deploy-k8s.sh` in `cd.yml`), not baked into the image, so one image can be promoted unchanged and still report which commit it is. A deploy that forgets to set it reports `unknown` rather than a wrong SHA. *(Revised 2026-09-29: an earlier draft said build argument, which contradicted `AD-014` and the Decision section above.)*
