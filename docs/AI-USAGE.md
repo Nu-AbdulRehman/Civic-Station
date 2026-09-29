@@ -160,6 +160,24 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   and plot scripts, VPA loop (requests 100m → 182m), §5.3 detectors + 26 tests, Traefik `Local` fix
   (AD-068), rate-limiter, zero-downtime, rollback, drain, persistence and clean-clone evidence;
   AD-066/067/068.
+- 2026-09-29 · docs/T-M10-003-quickstart-env · README quickstart: `make up` stays the one command; the
+  no-make path gains the PowerShell copy and a note that `.env` holds every credential and GitHub
+  secrets never reach a clone. Rejected putting dev defaults for `POSTGRES_*` in `compose.yaml`: the
+  brief's §3.2 wants credentials from `.env`, and a password in a committed file risks the −20. Files:
+  `README.md`.
+- 2026-09-29 · fix/T-M6-010-ollama-cpu-limit · Ollama always fell back to rules: its 2-CPU Compose limit
+  made each triage 8-12 s against the 10 s timeout. Raised to 4 CPUs (~4 s per triage), measured with
+  `docker update --cpus`. Files: `compose.yaml`, `docs/failure-log.md`, `docs/evidence/ollama-offline.txt`.
+- 2026-09-29 · feat/T-M11-007-ui-theme · UI polish as the cross-area swap (Dev 2 in M1): light/dark toggle
+  (pre-paint theme in `index.html`, saved choice else OS), civic-blue palette as CSS tokens, SVG
+  favicon, per-page titles + meta, footer from `GET /api/version`, status/priority pills; 2 new test
+  files, each confirmed red with its component broken. Files: `frontend/{index.html,public/favicon.svg,
+  src/styles.css,src/App.tsx,src/components/{ThemeToggle,SiteFooter,StatusControl}.tsx,
+  src/pages/DashboardPage.tsx,tests/{ThemeToggle,SiteFooter}.test.tsx}`.
+- 2026-09-29 · feat/T-M11-007-ui-theme · Deliberate merge conflict (T-M11-005): companion branch
+  `feat/T-M11-005-header-tagline` edits the same `<h1>` in `frontend/src/App.tsx`; conflict resolved by
+  keeping logo and tagline; fixed a duplicated product name in the first resolution; evidence in
+  `docs/evidence/merge-conflict.md`.
 
 ## Skill invocations
 

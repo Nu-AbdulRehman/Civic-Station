@@ -34,6 +34,7 @@ export default function StatusControl({
   return (
     <div className="status-control">
       <select
+        className={`pill pill-status-${complaint.status}`}
         aria-label={`Status of complaint ${complaint.id}`}
         value={complaint.status}
         disabled={pending}
