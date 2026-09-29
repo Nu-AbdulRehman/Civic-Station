@@ -97,7 +97,9 @@ export default function DashboardPage() {
                       <div className="muted">{c.location}</div>
                     </td>
                     <td>{humanise(c.category)}</td>
-                    <td className={`priority-${c.priority}`}>{c.priority}</td>
+                    <td>
+                      <span className={`pill pill-priority-${c.priority}`}>{c.priority}</span>
+                    </td>
                     <td>{PROVIDER_LABEL[c.triaged_by]}</td>
                     <td>
                       <StatusControl complaint={c} onChanged={replace} />

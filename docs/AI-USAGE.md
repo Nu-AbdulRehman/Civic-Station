@@ -168,6 +168,12 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
 - 2026-09-29 · fix/T-M6-010-ollama-cpu-limit · Ollama always fell back to rules: its 2-CPU Compose limit
   made each triage 8-12 s against the 10 s timeout. Raised to 4 CPUs (~4 s per triage), measured with
   `docker update --cpus`. Files: `compose.yaml`, `docs/failure-log.md`, `docs/evidence/ollama-offline.txt`.
+- 2026-09-29 · feat/T-M11-007-ui-theme · UI polish as the cross-area swap (Dev 2 in M1): light/dark toggle
+  (pre-paint theme in `index.html`, saved choice else OS), civic-blue palette as CSS tokens, SVG
+  favicon, per-page titles + meta, footer from `GET /api/version`, status/priority pills; 2 new test
+  files, each confirmed red with its component broken. Files: `frontend/{index.html,public/favicon.svg,
+  src/styles.css,src/App.tsx,src/components/{ThemeToggle,SiteFooter,StatusControl}.tsx,
+  src/pages/DashboardPage.tsx,tests/{ThemeToggle,SiteFooter}.test.tsx}`.
 
 ## Skill invocations
 

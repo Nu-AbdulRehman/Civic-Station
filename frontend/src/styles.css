@@ -1,39 +1,135 @@
+/* Civic blue palette. Three core colours per mode (--bg, --surface/--text, --accent); every
+   other colour is derived from these tokens so both themes stay coherent. The theme is chosen
+   before first paint by the inline script in index.html and flipped by ThemeToggle. */
 :root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --text: #16202b;
+  --accent: #1f5f9e;
+  --accent-contrast: #ffffff;
+  --muted: #5b6776;
+  --border: #dce2e9;
+  --input-border: #b3bdc9;
+  --danger: #b3261e;
+  --danger-bg: #fdecea;
+  --warning: #9a5b00;
+  --warning-bg: #fff4e5;
+  --success: #2e7d32;
+  --success-bg: #e8f5e9;
+  --info-bg: #e7f0fa;
+  color-scheme: light;
   font-family: system-ui, sans-serif;
-  color: #1b1f24;
-  background: #f6f7f9;
+  color: var(--text);
+  background: var(--bg);
+}
+:root[data-theme="dark"] {
+  --bg: #0e1621;
+  --surface: #172230;
+  --text: #e4eaf1;
+  --accent: #6aa8e8;
+  --accent-contrast: #0e1621;
+  --muted: #93a1b3;
+  --border: #2a3748;
+  --input-border: #3b4a5e;
+  --danger: #f28b82;
+  --danger-bg: #3a1f24;
+  --warning: #f3b45c;
+  --warning-bg: #3a2c14;
+  --success: #7bc67e;
+  --success-bg: #1d3320;
+  --info-bg: #1b2d44;
+  color-scheme: dark;
 }
 body {
   margin: 0;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+a {
+  color: var(--accent);
+}
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 .shell header {
   display: flex;
   align-items: center;
   gap: 2rem;
   padding: 0.75rem 1.5rem;
-  background: #fff;
-  border-bottom: 1px solid #dde1e6;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 .shell h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.25rem;
   margin: 0;
+}
+.shell h1 img {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 .shell nav {
   display: flex;
   gap: 1rem;
 }
 .shell nav a {
-  color: #34506b;
+  color: var(--muted);
   text-decoration: none;
+  padding-bottom: 0.15rem;
+  border-bottom: 2px solid transparent;
+}
+.shell nav a:hover {
+  color: var(--text);
 }
 .shell nav a.active {
+  color: var(--text);
   font-weight: 600;
-  text-decoration: underline;
+  border-bottom-color: var(--accent);
 }
 .shell main {
+  flex: 1;
+  width: 100%;
   max-width: 960px;
+  box-sizing: border-box;
   margin: 1.5rem auto;
   padding: 0 1.5rem;
+}
+.theme-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  justify-self: auto;
+}
+.theme-toggle:hover {
+  background: var(--bg);
+}
+.theme-toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.site-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+.site-footer code {
+  font-size: inherit;
 }
 .form {
   display: grid;
@@ -49,14 +145,16 @@ body {
 select {
   font: inherit;
   padding: 0.5rem;
-  border: 1px solid #b8c0c9;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
 }
 .field [aria-invalid="true"] {
-  border-color: #b3261e;
+  border-color: var(--danger);
 }
 .field-error {
-  color: #b3261e;
+  color: var(--danger);
   margin: 0;
   font-size: 0.9rem;
 }
@@ -64,9 +162,9 @@ button {
   font: inherit;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  border: 1px solid #34506b;
-  background: #34506b;
-  color: #fff;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
   cursor: pointer;
   justify-self: start;
 }
@@ -82,8 +180,8 @@ button:disabled {
 .spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid #b8c0c9;
-  border-top-color: #34506b;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -98,26 +196,26 @@ button:disabled {
   margin-top: 1rem;
 }
 .banner.error {
-  background: #fdecea;
-  border: 1px solid #b3261e;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
 }
 .banner.warning {
-  background: #fff4e5;
-  border: 1px solid #b26a00;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
 }
 .banner p {
   margin: 0.25rem 0;
 }
 .request-id,
 .muted {
-  color: #5b6570;
+  color: var(--muted);
   font-size: 0.85rem;
 }
 .result {
   margin-top: 1.5rem;
   padding: 1rem;
-  background: #fff;
-  border: 1px solid #dde1e6;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 4px;
 }
 .result dl {
@@ -145,18 +243,14 @@ button:disabled {
 table.complaints {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--surface);
 }
 table.complaints th,
 table.complaints td {
   text-align: left;
   vertical-align: top;
   padding: 0.5rem;
-  border-bottom: 1px solid #dde1e6;
-}
-.priority-high {
-  color: #b3261e;
-  font-weight: 600;
+  border-bottom: 1px solid var(--border);
 }
 .pagination {
   display: flex;
@@ -167,19 +261,67 @@ table.complaints td {
 .status-control .field-error {
   max-width: 16rem;
 }
+/* Pills: the class suffix is the server's own value, so no vocabulary is written in TS. */
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+.pill-priority-high {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+.pill-priority-normal {
+  color: var(--accent);
+  background: var(--info-bg);
+}
+.pill-priority-low {
+  color: var(--muted);
+  background: var(--bg);
+  border-color: var(--border);
+}
+select.pill {
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+.pill-status-open {
+  color: var(--accent);
+  background: var(--info-bg);
+  border-color: var(--accent);
+}
+.pill-status-in_progress {
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-color: var(--warning);
+}
+.pill-status-resolved {
+  color: var(--success);
+  background: var(--success-bg);
+  border-color: var(--success);
+}
+.pill-status-rejected {
+  color: var(--muted);
+  background: var(--bg);
+  border-color: var(--border);
+}
 .badge {
   display: inline-block;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   font-weight: 700;
   font-size: 0.85rem;
-  color: #fff;
+  color: var(--surface);
 }
 .badge-hit {
-  background: #2e7d32;
+  background: var(--success);
 }
 .badge-miss {
-  background: #b26a00;
+  background: var(--warning);
 }
 .stats-grid {
   display: grid;
@@ -187,7 +329,7 @@ table.complaints td {
   gap: 1rem;
 }
 table.counts {
-  background: #fff;
+  background: var(--surface);
   border-collapse: collapse;
   width: 100%;
 }
@@ -200,7 +342,7 @@ table.counts th,
 table.counts td {
   text-align: left;
   padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid #dde1e6;
+  border-bottom: 1px solid var(--border);
   text-transform: capitalize;
 }
 table.counts td {
