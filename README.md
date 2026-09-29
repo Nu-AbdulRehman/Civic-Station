@@ -11,12 +11,16 @@ make up
 That copies `.env.example` to `.env` if there is none, builds both images, runs the migration
 and the seed as a one-shot `migrate` service, and waits until every service is healthy. Open
 <http://civic-station.localhost:8080>. The default provider is `rules`, so no API key is needed.
-Without `make`, run the same two steps by hand:
+Without `make` (plain Windows, for example), run the same two steps by hand:
 
 ```sh
-cp .env.example .env
+cp .env.example .env                 # PowerShell: Copy-Item .env.example .env
 docker compose up -d --build --wait
 ```
+
+`.env` is where Compose reads every credential (`POSTGRES_*`, and `GROQ_API_KEY` if you use
+Groq); it is git-ignored, and `.env.example` holds placeholders only (brief §3.2). The GitHub
+repository secrets are used only by the CD workflow and are never available to a clone.
 
 To use Groq, set `TRIAGE_PROVIDER=llm` and `GROQ_API_KEY` in `.env` (never in a committed file).
 For offline triage with Ollama, pull the weights once, then start the profile:

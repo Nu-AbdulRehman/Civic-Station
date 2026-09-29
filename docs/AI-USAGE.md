@@ -160,6 +160,11 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   and plot scripts, VPA loop (requests 100m → 182m), §5.3 detectors + 26 tests, Traefik `Local` fix
   (AD-068), rate-limiter, zero-downtime, rollback, drain, persistence and clean-clone evidence;
   AD-066/067/068.
+- 2026-09-29 · docs/T-M10-003-quickstart-env · README quickstart: `make up` stays the one command; the
+  no-make path gains the PowerShell copy and a note that `.env` holds every credential and GitHub
+  secrets never reach a clone. Rejected putting dev defaults for `POSTGRES_*` in `compose.yaml`: the
+  brief's §3.2 wants credentials from `.env`, and a password in a committed file risks the −20. Files:
+  `README.md`.
 
 ## Skill invocations
 
