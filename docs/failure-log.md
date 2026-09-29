@@ -87,3 +87,8 @@ reconstructed from memory; from here on, entries are appended as the failure hap
 ### 2026-09-28 · P11 · `scripts/k3d-up.sh` failed on a fresh cluster
 - **Symptom:** `kubectl rollout status statefulset/postgres` timed out at 180 s; backend init containers crash-looped meanwhile.
 - **Truth:** a cold cluster pulls the postgres image first, which took longer than 180 s on this connection; the backend's migrate container retries until the database answers, as designed. Timeout raised to 600 s. The crash-looping init container is expected, not a fault.
+
+### 2026-09-29 · P9 · With TRIAGE_PROVIDER=ollama every complaint still fell back to rules
+- **Symptom:** the Ollama container was healthy and `/api/version` reported `llm:ollama`, yet every complaint came back `rules:fallback`; the backend logged `triage.retry` then `triage.fallback` with `error_class: Timeout`.
+- **Wrongly believed:** the ~20 s latency seen on 2026-09-28 was the model loading, and a warm model would answer inside the 10 s timeout.
+- **Truth:** `ollama ps` showed the model loaded, and a direct timed `POST /api/chat` from the backend container showed generation at ~4–5 tokens/s: 38 tokens in 7–11 s, against a 10 s `TRIAGE_TIMEOUT_SECONDS`. `docker stats` showed Ollama pinned at ~118 % CPU: `compose.yaml` capped the service at `cpus: "2.0"` on a 12-CPU Docker VM. `docker update --cpus` measured 3.5 s at 4 CPUs and 2 s at 8. The cap is now 4; through the app, four complaints in a row were `llm:ollama` at ~4 s. The earlier "~20 s" in `docs/evidence/ollama-offline.txt` was the same cap: one call timed out and the retry happened to finish.

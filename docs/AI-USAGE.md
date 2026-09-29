@@ -165,6 +165,9 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   secrets never reach a clone. Rejected putting dev defaults for `POSTGRES_*` in `compose.yaml`: the
   brief's §3.2 wants credentials from `.env`, and a password in a committed file risks the −20. Files:
   `README.md`.
+- 2026-09-29 · fix/T-M6-010-ollama-cpu-limit · Ollama always fell back to rules: its 2-CPU Compose limit
+  made each triage 8-12 s against the 10 s timeout. Raised to 4 CPUs (~4 s per triage), measured with
+  `docker update --cpus`. Files: `compose.yaml`, `docs/failure-log.md`, `docs/evidence/ollama-offline.txt`.
 
 ## Skill invocations
 
