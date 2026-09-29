@@ -9,7 +9,9 @@ export default function App() {
   return (
     <div className="shell">
       <header>
-        <h1>Civic-Station</h1>
+        <h1>
+          Civic-Station <span className="muted">Complaint triage</span>
+        </h1>
         <nav aria-label="Main">
           <NavLink to="/" end>
             Submit
