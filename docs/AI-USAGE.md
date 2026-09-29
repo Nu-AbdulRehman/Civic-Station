@@ -174,6 +174,10 @@ One entry per completed task, appended by the agent that did it (`CLAUDE.md` §8
   files, each confirmed red with its component broken. Files: `frontend/{index.html,public/favicon.svg,
   src/styles.css,src/App.tsx,src/components/{ThemeToggle,SiteFooter,StatusControl}.tsx,
   src/pages/DashboardPage.tsx,tests/{ThemeToggle,SiteFooter}.test.tsx}`.
+- 2026-09-29 · feat/T-M11-007-ui-theme · Deliberate merge conflict (T-M11-005): companion branch
+  `feat/T-M11-005-header-tagline` edits the same `<h1>` in `frontend/src/App.tsx`; conflict resolved by
+  keeping logo and tagline; fixed a duplicated product name in the first resolution; evidence in
+  `docs/evidence/merge-conflict.md`.
 
 ## Skill invocations
 

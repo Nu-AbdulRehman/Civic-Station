@@ -21,7 +21,7 @@ export default function App() {
       <header>
         <h1>
           <img src="/favicon.svg" alt="" />
-          Civic-Station
+          Civic-Station <span className="muted">Complaint triage</span>
         </h1>
         <nav aria-label="Main">
           <NavLink to="/" end>
